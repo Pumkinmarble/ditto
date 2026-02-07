@@ -76,3 +76,7 @@ ui/experimentation/avatar/public/avatars/*.glb
 *.tmp
 *.temp
 .cache/
+
+# User-generated content
+quiz-answers/
+diary-entries/

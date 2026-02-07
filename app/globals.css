@@ -105,6 +105,15 @@ body {
     inset 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+/* Diary editor text styling */
+[contenteditable] {
+  color: #000000 !important;
+}
+
+[contenteditable] * {
+  color: #000000 !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
