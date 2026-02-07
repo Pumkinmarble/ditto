@@ -31,3 +31,17 @@ Set the following in your environment (server-side only):
 ## Notes
 - The ElevenLabs API key is never exposed client-side.
 - The demo page keeps `voice_id` in React state only.
+
+## Tone profile (optional)
+If you want automatic voice settings, edit:
+- `voice_module/voice_profiles/active.txt`
+
+The module reads settings from the top of this file (before the first blank line) and maps them to ElevenLabs `voice_settings`.
+Example:
+```
+stability: 0.45
+similarity_boost: 0.85
+style: 0.35
+speaker_boost: true
+```
+Values can be `0-1` or `0-100`. Any text after the first blank line is ignored.
