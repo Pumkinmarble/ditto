@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Toast from './Toast';
+import { getSessionId } from '../../../lib/session';
 
 interface DiaryPopupProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export default function DiaryPopup({
 }: DiaryPopupProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentFont, setCurrentFont] = useState('Arial');
-  const [sessionId] = useState(() => Date.now().toString());
+  const [sessionId] = useState(() => getSessionId());
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);

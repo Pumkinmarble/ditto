@@ -5,6 +5,7 @@
 
 export { BackboardClient } from "./backboard-client";
 export { EchoService } from "./echo-service";
+export { EchoFromDB } from "./echo-from-db";
 export type {
   BackboardConfig,
   CreateAssistantPayload,

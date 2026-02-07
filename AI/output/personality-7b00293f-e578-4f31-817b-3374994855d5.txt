@@ -1,0 +1,12 @@
+PERSONALITY QUIZ RESULTS - Demo User
+
+Email: demo-1770505071914@echo.ai
+Personality Type: ESTJ-A
+
+PERSONALITY DIMENSIONS:
+- undefined (NaN%) - undefined
+- undefined (NaN%) - undefined
+- undefined (NaN%) - undefined
+- undefined (NaN%) - undefined
+- undefined (NaN%) - undefined
+

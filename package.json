@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "ai:test": "tsx AI/test.ts"
+    "ai:test": "tsx AI/test.ts",
+    "ai:test-db": "tsx AI/test-from-db.ts"
   },
   "keywords": [
     "ai",

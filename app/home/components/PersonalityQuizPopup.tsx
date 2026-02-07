@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { QUESTIONS, Response, initializeScores, calculateScore, calculatePersonalityType, getPersonalityDescription, getDimensionBreakdown, PersonalityType } from '../../../utils/personalityTest';
+import { getSessionId } from '../../../lib/session';
 
 interface PersonalityQuizPopupProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export default function PersonalityQuizPopup({
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Response[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [sessionId] = useState(() => Date.now().toString());
+  const [sessionId] = useState(() => getSessionId());
   const [isComplete, setIsComplete] = useState(false);
   const [result, setResult] = useState<{ type: PersonalityType; description: any; dimensions: any[] } | null>(null);
 
