@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import PersonalityQuizPopup from './components/PersonalityQuizPopup';
 import DiaryPopup from './components/DiaryPopup';
+import VoiceClonePopup from './components/VoiceClonePopup';
 
 export default function HomePage() {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
@@ -52,10 +53,6 @@ export default function HomePage() {
     }
   };
 
-  const handlePopupClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent background click when clicking popup
-  };
-
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePos({
@@ -71,10 +68,10 @@ export default function HomePage() {
       // Selected button slides to middle position
       if (buttonName === 'quiz') {
         // Left button (A) slides RIGHT to middle (B's position)
-        return { transform: 'translateX(200px)' };
+        return { transform: 'translateX(180px)' };
       } else if (buttonName === 'voice') {
         // Right button (C) slides LEFT to middle (B's position)
-        return { transform: 'translateX(-200px)' };
+        return { transform: 'translateX(-180px)' };
       }
       // Middle button (B) already centered, stays in place
       return {};
@@ -99,8 +96,19 @@ export default function HomePage() {
       style={{ background: '#FFF8F0' }}
       onClick={handleBackgroundClick}
     >
+      {/* Backdrop blur when popup is open */}
+      <div
+        className="fixed inset-0 transition-all duration-300"
+        style={{
+          backdropFilter: selectedButton ? 'blur(8px)' : 'blur(0px)',
+          backgroundColor: selectedButton ? 'rgba(0, 0, 0, 0.1)' : 'transparent',
+          pointerEvents: selectedButton ? 'auto' : 'none',
+          zIndex: 40,
+        }}
+      />
+
       {/* Three buttons at the bottom */}
-      <div className="flex gap-8 relative">
+      <div className="flex gap-8 relative" style={{ zIndex: 45 }}>
         <button
           onClick={(e) => handleButtonClick(e, 'quiz')}
           className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
@@ -156,64 +164,20 @@ export default function HomePage() {
         />
       )}
 
+      {/* Voice Clone popup */}
       {selectedButton === 'voice' && (
-        <div
-          onClick={handlePopupClick}
+        <VoiceClonePopup
+          isOpen={showPopup}
+          onClose={() => {
+            setShowPopup(false);
+            setTimeout(() => setSelectedButton(null), 400);
+          }}
+          mousePos={mousePos}
+          isHovering={isHovering}
           onMouseMove={handleMouseMove}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          className="fixed transition-all duration-300 ease-in-out rounded-2xl shadow-2xl p-8"
-          style={{
-            background: `
-              linear-gradient(90deg,
-                rgba(255, 123, 107, 0.03) 0%,
-                rgba(168, 85, 247, 0.03) 50%,
-                rgba(59, 130, 246, 0.03) 100%
-              ),
-              linear-gradient(145deg, #FFFFFF, #FFF5E8)
-            `,
-            boxShadow: `
-              0 10px 30px rgba(0, 0, 0, 0.12),
-              0 1px 8px rgba(0, 0, 0, 0.08),
-              inset 0 2px 4px rgba(255, 255, 255, 1),
-              inset 0 -2px 4px rgba(0, 0, 0, 0.08)
-            `,
-            width: '900px',
-            height: '600px',
-            left: '50%',
-            transform: showPopup
-              ? 'translate(-50%, -50%)'
-              : 'translate(-50%, 50vh)',
-            top: showPopup ? '45%' : '100%',
-            opacity: showPopup ? 1 : 0,
-            pointerEvents: showPopup ? 'auto' : 'none',
-            zIndex: 50,
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              pointerEvents: 'none',
-              background: `radial-gradient(circle 30px at ${mousePos.x}px ${mousePos.y}px,
-                rgba(255, 123, 107, 0.4),
-                rgba(168, 85, 247, 0.3) 40%,
-                rgba(59, 130, 246, 0.2) 70%,
-                transparent 100%)`,
-              opacity: showPopup && isHovering ? 1 : 0,
-              transition: 'opacity 0.3s ease',
-              borderRadius: '1rem',
-            }}
-          />
-          <div className="relative z-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Voice Cloning</h2>
-            <p className="text-gray-600">Content for voice cloning goes here...</p>
-          </div>
-        </div>
+        />
       )}
     </main>
   );

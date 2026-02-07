@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QUESTIONS, Response, initializeScores, calculateScore, calculatePersonalityType, getPersonalityDescription, getDimensionBreakdown, PersonalityType } from '../../../utils/personalityTest';
 import { getSessionId } from '../../../lib/session';
 
@@ -32,6 +32,32 @@ export default function PersonalityQuizPopup({
 
   const totalQuestions = QUESTIONS.length;
   const question = QUESTIONS[currentQuestion];
+
+  // Load saved results from localStorage on mount
+  useEffect(() => {
+    const savedResults = localStorage.getItem('personalityQuizResults');
+    if (savedResults) {
+      try {
+        const parsedResults = JSON.parse(savedResults);
+        setResult(parsedResults);
+        setIsComplete(true);
+      } catch (error) {
+        console.error('Failed to load saved results:', error);
+      }
+    }
+  }, []);
+
+  const handleTryAgain = () => {
+    // Clear localStorage
+    localStorage.removeItem('personalityQuizResults');
+
+    // Reset all state
+    setCurrentQuestion(0);
+    setAnswers([]);
+    setInputValue('');
+    setIsComplete(false);
+    setResult(null);
+  };
 
   const handleSubmitAnswer = () => {
     const answer = parseInt(inputValue);
@@ -90,8 +116,12 @@ export default function PersonalityQuizPopup({
     // Save results to file
     await saveResultsToFile(personalityType, description, dimensions);
 
+    // Save results to localStorage
+    const resultsToSave = { type: personalityType, description, dimensions };
+    localStorage.setItem('personalityQuizResults', JSON.stringify(resultsToSave));
+
     // Show results
-    setResult({ type: personalityType, description, dimensions });
+    setResult(resultsToSave);
     setIsComplete(true);
   };
 
@@ -295,29 +325,41 @@ export default function PersonalityQuizPopup({
                     </div>
                   </div>
 
-                  {/* Close button */}
-                  <button
-                    onClick={onClose}
-                    className="w-full mt-4 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-75 text-gray-800"
-                    style={{
-                      background: `
-                        linear-gradient(90deg,
-                          rgba(255, 123, 107, 0.03) 0%,
-                          rgba(168, 85, 247, 0.03) 50%,
-                          rgba(59, 130, 246, 0.03) 100%
-                        ),
-                        linear-gradient(145deg, #FFFFFF, #FFF5E8)
-                      `,
-                      boxShadow: `
-                        0 10px 30px rgba(0, 0, 0, 0.12),
-                        0 1px 8px rgba(0, 0, 0, 0.08),
-                        inset 0 2px 4px rgba(255, 255, 255, 1),
-                        inset 0 -2px 4px rgba(0, 0, 0, 0.08)
-                      `
-                    }}
-                  >
-                    Close
-                  </button>
+                  {/* Buttons */}
+                  <div className="flex gap-3 mt-4">
+                    {/* Close button */}
+                    <button
+                      onClick={onClose}
+                      className="flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-75 text-gray-800"
+                      style={{
+                        background: `
+                          linear-gradient(90deg,
+                            rgba(255, 123, 107, 0.03) 0%,
+                            rgba(168, 85, 247, 0.03) 50%,
+                            rgba(59, 130, 246, 0.03) 100%
+                          ),
+                          linear-gradient(145deg, #FFFFFF, #FFF5E8)
+                        `,
+                        boxShadow: `
+                          0 10px 30px rgba(0, 0, 0, 0.12),
+                          0 1px 8px rgba(0, 0, 0, 0.08),
+                          inset 0 2px 4px rgba(255, 255, 255, 1),
+                          inset 0 -2px 4px rgba(0, 0, 0, 0.08)
+                        `
+                      }}
+                    >
+                      Close
+                    </button>
+
+                    {/* Try Again button */}
+                    <button
+                      onClick={handleTryAgain}
+                      className="flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-90 text-white"
+                      style={{ backgroundColor: '#4C1D95' }}
+                    >
+                      Try Again
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
