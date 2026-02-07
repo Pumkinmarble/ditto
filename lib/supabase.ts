@@ -49,3 +49,12 @@ export interface User {
   updated_at: string;
   last_login_at: string;
 }
+
+export interface DiaryEntry {
+  id: string;
+  user_id: string;
+  content: string;
+  entry_date: string;
+  created_at: string;
+  updated_at: string;
+}
