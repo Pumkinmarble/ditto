@@ -1,0 +1,22 @@
+# Dependencies for Auth Module
+
+## Required NPM Packages
+
+```bash
+npm install @auth0/nextjs-auth0 @supabase/supabase-js
+```
+
+## Package Versions (for reference)
+- @auth0/nextjs-auth0: ^3.5.0 (or latest)
+- @supabase/supabase-js: ^2.39.0 (or latest)
+
+## Already in Next.js 15
+- next: 15.x
+- react: 18.x
+- typescript: 5.x
+
+## For Type Safety (optional but recommended)
+
+```bash
+npm install -D @types/node
+```
