@@ -1,0 +1,10 @@
+{
+  "comment": "Add these to your main tsconfig.json if you get module errors",
+  "compilerOptions": {
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["node", "three"]
+  }
+}
