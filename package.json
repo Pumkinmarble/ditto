@@ -1,0 +1,35 @@
+{
+  "name": "echo-ai-twin",
+  "version": "0.1.0",
+  "description": "Echo - AI-powered digital twin that learns personality through diary entries",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "ai:test": "tsx AI/test.ts",
+    "ai:debug": "tsx AI/debug-api.ts"
+  },
+  "keywords": [
+    "ai",
+    "digital-twin",
+    "backboard",
+    "gemini"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.6",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.3",
+    "tsx": "^4.19.2"
+  }
+}
