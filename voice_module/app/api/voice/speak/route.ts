@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ElevenLabsError, textToSpeech } from "../../../../lib/elevenlabs";
+import { readToneProfile } from "../../../../lib/toneProfile";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await textToSpeech({ voice_id: voiceId, text });
+    const voiceSettings = await readToneProfile();
+    const result = await textToSpeech({
+      voice_id: voiceId,
+      text,
+      voice_settings: voiceSettings ?? undefined,
+    });
 
     return new NextResponse(result.audio, {
       status: 200,

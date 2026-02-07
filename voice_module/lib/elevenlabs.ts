@@ -59,8 +59,24 @@ export async function cloneVoice(params: {
 export async function textToSpeech(params: {
   voice_id: string;
   text: string;
+  voice_settings?: {
+    stability?: number;
+    similarity_boost?: number;
+    style?: number;
+    speaker_boost?: boolean;
+  };
 }): Promise<{ audio: ArrayBuffer; contentType: string }> {
   const apiKey = getApiKey();
+
+  const payload: Record<string, unknown> = {
+    text: params.text,
+    model_id: "eleven_multilingual_v2",
+    output_format: "mp3_44100_128",
+  };
+
+  if (params.voice_settings && Object.keys(params.voice_settings).length > 0) {
+    payload.voice_settings = params.voice_settings;
+  }
 
   const res = await fetch(
     `${ELEVENLABS_BASE_URL}/text-to-speech/${encodeURIComponent(
@@ -73,11 +89,7 @@ export async function textToSpeech(params: {
         "Content-Type": "application/json",
         Accept: "audio/mpeg",
       },
-      body: JSON.stringify({
-        text: params.text,
-        model_id: "eleven_multilingual_v2",
-        output_format: "mp3_44100_128",
-      }),
+      body: JSON.stringify(payload),
     }
   );
 
