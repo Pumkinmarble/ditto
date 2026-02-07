@@ -82,29 +82,29 @@ const TONE_KEYWORDS: { tone: string; words: string[]; settings: VoiceSettings }[
   {
     tone: "urgent",
     words: ["injustice", "failing", "fight", "wrong", "destroy", "burning", "struggle", "crisis", "anger", "furious"],
-    settings: { stability: 0.25, similarity_boost: 0.85, style: 0.60, speaker_boost: true },
+    settings: { stability: 0.45, similarity_boost: 0.85, style: 0.50, speaker_boost: true },
   },
   {
     tone: "emotional",
     words: ["heartbreak", "soul", "tears", "crying", "broke my heart", "deeply", "love", "pain", "grief", "miss"],
-    settings: { stability: 0.30, similarity_boost: 0.85, style: 0.55, speaker_boost: true },
+    settings: { stability: 0.50, similarity_boost: 0.85, style: 0.45, speaker_boost: true },
   },
   {
     tone: "warm",
     words: ["hope", "healing", "compassion", "children", "smile", "joy", "kindness", "gentle", "care", "hug"],
-    settings: { stability: 0.40, similarity_boost: 0.85, style: 0.45, speaker_boost: true },
+    settings: { stability: 0.55, similarity_boost: 0.85, style: 0.40, speaker_boost: true },
   },
   {
     tone: "reflective",
     words: ["balance", "wisdom", "journey", "decisions", "logic", "rational", "philosophy", "think", "consider", "understand"],
-    settings: { stability: 0.55, similarity_boost: 0.85, style: 0.25, speaker_boost: true },
+    settings: { stability: 0.65, similarity_boost: 0.85, style: 0.20, speaker_boost: true },
   },
 ];
 
 const DEFAULT_SETTINGS: VoiceSettings = {
-  stability: 0.45,
+  stability: 0.55,
   similarity_boost: 0.85,
-  style: 0.35,
+  style: 0.30,
   speaker_boost: true,
 };
 

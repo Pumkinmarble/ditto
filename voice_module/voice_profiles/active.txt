@@ -1,5 +1,5 @@
 # Echo tone profile (auto-updated per question)
-stability: 0.4
+stability: 0.5
 similarity_boost: 0.85
 style: 0.45
 speaker_boost: true

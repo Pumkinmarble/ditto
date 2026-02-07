@@ -61,10 +61,13 @@ export async function POST(req: NextRequest) {
     // Step 2: Update active.txt with the dynamic settings
     await updateActiveTxt(voiceSettings);
 
-    // Step 3: Generate speech with the dynamic settings
+    // Step 3: Clean text for TTS (strip emojis — they cause choppy audio)
+    const cleanText = answer.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}]/gu, "").replace(/\s{2,}/g, " ").trim();
+
+    // Step 4: Generate speech with the dynamic settings
     const { audio } = await textToSpeech({
       voice_id: voiceId,
-      text: answer,
+      text: cleanText,
       voice_settings: voiceSettings,
     });
 
