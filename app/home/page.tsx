@@ -100,7 +100,7 @@ export default function HomePage() {
     >
       {/* Logout Section - Top Right */}
       <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
-        {user && (
+        {user ? (
           <>
             {/* User Info */}
             <div className="flex items-center gap-3 acrylic-button px-4 py-2 rounded-lg">
@@ -127,6 +127,28 @@ export default function HomePage() {
               Logout
             </a>
           </>
+        ) : (
+          /* Dev Mode - Back to Login Button */
+          <a
+            href="/login"
+            className="acrylic-button p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-10"
+            onClick={(e) => e.stopPropagation()}
+            title="Back to Login"
+          >
+            <svg
+              className="w-6 h-6 text-gray-700"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+          </a>
         )}
       </div>
 

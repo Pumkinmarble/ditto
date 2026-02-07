@@ -40,7 +40,7 @@ const afterCallback = async (req: NextRequest, session: any) => {
  */
 export const GET = handleAuth({
   login: handleLogin({
-    returnTo: '/dashboard', // Redirect after login
+    returnTo: '/home', // Redirect after login
   }),
   callback: handleCallback({
     afterCallback,
