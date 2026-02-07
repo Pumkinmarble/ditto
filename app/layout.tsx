@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "CXC 2026 - AI Personality Avatar",
-  description: "Discover your personality with an AI-powered talking avatar",
+  title: "Echo - AI Digital Twin",
+  description: "Create your AI-powered digital twin that lives forever",
 };
 
 export default function RootLayout({
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {children}
+        <UserProvider>
+          {children}
+        </UserProvider>
       </body>
     </html>
   );

@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 import PersonalityQuizPopup from './components/PersonalityQuizPopup';
 import DiaryPopup from './components/DiaryPopup';
 
 export default function HomePage() {
+  const { user } = useUser();
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -99,6 +101,38 @@ export default function HomePage() {
       style={{ background: '#FFF8F0' }}
       onClick={handleBackgroundClick}
     >
+      {/* Logout Section - Top Right */}
+      <div className="absolute top-6 right-6 flex items-center gap-4">
+        {user && (
+          <>
+            {/* User Info */}
+            <div className="flex items-center gap-3 acrylic-button px-4 py-2 rounded-lg">
+              {user.picture && (
+                <img
+                  src={user.picture}
+                  alt={user.name || 'User'}
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-gray-800">
+                  {user.name || user.email}
+                </span>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <a
+              href="/api/auth/logout"
+              className="acrylic-button px-4 py-2 rounded-lg font-semibold text-gray-800 hover:bg-red-50 transition-colors relative z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Logout
+            </a>
+          </>
+        )}
+      </div>
+
       {/* Three buttons at the bottom */}
       <div className="flex gap-8 relative">
         <button
