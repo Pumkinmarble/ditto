@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Sprite Avatar Lip Sync Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+            color: #4CAF50;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #aaa;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+
+        .status.loading {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+        }
+
+        /* Avatar Canvas */
+        #avatarCanvas {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 2D Avatar Container */
+        .avatar-2d {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: none;
+        }
+
+        .avatar-2d.active {
+            display: block;
+        }
+
+        /* Face layers */
+        .face-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .face-base {
+            z-index: 1;
+        }
+
+        .face-eyes {
+            z-index: 2;
+        }
+
+        .face-mouth {
+            z-index: 3;
+        }
+
+        /* Avatar styles */
+        .avatar-face {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFE0BD 0%, #FFCBA4 100%);
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Eyes */
+        .eye {
+            position: absolute;
+            width: 20px;
+            height: 25px;
+            background: #2C3E50;
+            border-radius: 50%;
+            top: 35%;
+        }
+
+        .eye.left {
+            left: 30%;
+        }
+
+        .eye.right {
+            right: 30%;
+        }
+
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            top: 6px;
+            left: 6px;
+        }
+
+        /* Mouth - different shapes */
+        .mouth {
+            position: absolute;
+            left: 50%;
+            top: 60%;
+            transform: translateX(-50%);
+            transition: all 0.1s ease;
+        }
+
+        .mouth-closed {
+            width: 60px;
+            height: 4px;
+            background: #C44569;
+            border-radius: 2px;
+        }
+
+        .mouth-slight {
+            width: 60px;
+            height: 15px;
+            background: #C44569;
+            border-radius: 30px 30px 30px 30px;
+        }
+
+        .mouth-medium {
+            width: 60px;
+            height: 30px;
+            background: #C44569;
+            border-radius: 30px 30px 30px 30px;
+            position: relative;
+        }
+
+        .mouth-medium::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 15px;
+            background: #8B2E4E;
+            border-radius: 50%;
+        }
+
+        .mouth-wide {
+            width: 70px;
+            height: 45px;
+            background: #C44569;
+            border-radius: 35px 35px 35px 35px;
+            position: relative;
+        }
+
+        .mouth-wide::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 25px;
+            background: #8B2E4E;
+            border-radius: 50%;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+
+        .instructions li {
+            margin-bottom: 4px;
+        }
+
+        #debugInfo {
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2D Sprite Avatar Lip Sync Test</h1>
+
+        <div class="grid">
+            <!-- Left Panel: Controls -->
+            <div class="panel">
+                <h2>Controls</h2>
+
+                <div id="status" class="status" style="display:none;"></div>
+
+                <!-- Step 1: Choose Avatar -->
+                <div class="control-group">
+                    <h3>1️⃣ Choose Avatar Style</h3>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-primary" onclick="loadAvatar('male')">
+                            👨 Male Avatar
+                        </button>
+                        <button class="btn-primary" onclick="loadAvatar('female')">
+                            👩 Female Avatar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Load Audio -->
+                <div class="control-group" id="audioControls" style="display:none;">
+                    <h3>2️⃣ Load Audio</h3>
+                    <input type="file" accept="audio/*" onchange="loadAudioFile(event)" />
+                    <p style="font-size:12px; color:#aaa; margin-top:8px;">
+                        Upload any audio file (MP3, WAV, etc.)
+                    </p>
+                </div>
+
+                <!-- Step 3: Playback Controls -->
+                <div class="control-group" id="playbackControls" style="display:none;">
+                    <h3>3️⃣ Playback</h3>
+                    <button class="btn-primary" onclick="playAudio()" id="playBtn">
+                        ▶️ Play Audio
+                    </button>
+                    <button class="btn-danger" onclick="stopAudio()" style="display:none;" id="stopBtn">
+                        ⏹️ Stop
+                    </button>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <strong>📝 How It Works:</strong>
+                    <ol>
+                        <li>Pick male or female avatar</li>
+                        <li>Upload audio file</li>
+                        <li>Click Play - watch the mouth move!</li>
+                    </ol>
+                    <p style="margin-top:12px; font-size:12px; color:#888;">
+                        💡 This uses simple 2D sprites instead of 3D models - much faster and lighter!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Avatar Display -->
+            <div class="panel">
+                <h2>Avatar Preview (Head Only)</h2>
+                <div id="avatarCanvas">
+                    <!-- Male Avatar -->
+                    <div class="avatar-2d" id="maleAvatar">
+                        <div class="avatar-face" style="background: linear-gradient(135deg, #FFE0BD 0%, #FFCBA4 100%);">
+                            <!-- Eyes -->
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                            <!-- Mouth (will be dynamically updated) -->
+                            <div class="mouth mouth-closed" id="maleMouth"></div>
+                        </div>
+                    </div>
+
+                    <!-- Female Avatar -->
+                    <div class="avatar-2d" id="femaleAvatar">
+                        <div class="avatar-face" style="background: linear-gradient(135deg, #FFD1DC 0%, #FFBAC9 100%);">
+                            <!-- Eyes -->
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                            <!-- Mouth (will be dynamically updated) -->
+                            <div class="mouth mouth-closed" id="femaleMouth"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="debugInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioContext, analyser, audio, audioSource;
+        let animationId;
+        let currentMouth = null;
+        let currentAvatarType = null;
+
+        // Show status message
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        // Load avatar
+        window.loadAvatar = function(type) {
+            // Hide all avatars
+            document.querySelectorAll('.avatar-2d').forEach(av => av.classList.remove('active'));
+
+            // Show selected avatar
+            if (type === 'male') {
+                document.getElementById('maleAvatar').classList.add('active');
+                currentMouth = document.getElementById('maleMouth');
+            } else {
+                document.getElementById('femaleAvatar').classList.add('active');
+                currentMouth = document.getElementById('femaleMouth');
+            }
+
+            currentAvatarType = type;
+
+            showStatus(`✅ ${type === 'male' ? 'Male' : 'Female'} avatar loaded!`, 'success');
+            document.getElementById('audioControls').style.display = 'block';
+        };
+
+        // Load audio file
+        window.loadAudioFile = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log('Loading audio file:', file.name);
+
+            if (audio) {
+                audio.pause();
+                audio = null;
+            }
+
+            audio = new Audio(URL.createObjectURL(file));
+
+            audio.onloadeddata = () => {
+                showStatus('✅ Audio loaded! Ready to play.', 'success');
+                document.getElementById('playbackControls').style.display = 'block';
+            };
+
+            audio.onerror = () => {
+                showStatus('❌ Failed to load audio file', 'error');
+            };
+        };
+
+        // Play audio with lip sync
+        window.playAudio = function() {
+            if (!audio) {
+                showStatus('❌ Please load an audio file first', 'error');
+                return;
+            }
+
+            if (!currentMouth) {
+                showStatus('❌ Please select an avatar first', 'error');
+                return;
+            }
+
+            // Initialize audio context
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+
+                audioSource = audioContext.createMediaElementSource(audio);
+                audioSource.connect(analyser);
+                analyser.connect(audioContext.destination);
+            }
+
+            audio.play();
+            startLipSync();
+
+            document.getElementById('playBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'block';
+
+            audio.onended = () => {
+                stopLipSync();
+                document.getElementById('playBtn').style.display = 'block';
+                document.getElementById('stopBtn').style.display = 'none';
+                // Reset mouth to closed
+                setMouthShape('closed');
+            };
+        };
+
+        // Stop audio
+        window.stopAudio = function() {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+            stopLipSync();
+            document.getElementById('playBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            setMouthShape('closed');
+        };
+
+        // Set mouth shape
+        function setMouthShape(shape) {
+            if (!currentMouth) return;
+
+            // Remove all mouth classes
+            currentMouth.className = 'mouth';
+
+            // Add new shape class
+            switch(shape) {
+                case 'closed':
+                    currentMouth.classList.add('mouth-closed');
+                    break;
+                case 'slight':
+                    currentMouth.classList.add('mouth-slight');
+                    break;
+                case 'medium':
+                    currentMouth.classList.add('mouth-medium');
+                    break;
+                case 'wide':
+                    currentMouth.classList.add('mouth-wide');
+                    break;
+            }
+        }
+
+        // Start lip sync animation
+        function startLipSync() {
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+
+                // Get audio data
+                analyser.getByteFrequencyData(dataArray);
+
+                // Calculate average amplitude
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / dataArray.length;
+
+                // Map amplitude to mouth shapes
+                // 0-20: closed
+                // 20-40: slight
+                // 40-60: medium
+                // 60+: wide
+
+                let mouthShape = 'closed';
+                if (average > 60) {
+                    mouthShape = 'wide';
+                } else if (average > 40) {
+                    mouthShape = 'medium';
+                } else if (average > 20) {
+                    mouthShape = 'slight';
+                }
+
+                setMouthShape(mouthShape);
+
+                // Update debug info
+                const debugInfo = document.getElementById('debugInfo');
+                debugInfo.textContent = `Audio Level: ${average.toFixed(1)} | Mouth: ${mouthShape}`;
+            }
+
+            animate();
+        }
+
+        // Stop lip sync animation
+        function stopLipSync() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        // Initialize on load
+        showStatus('Ready! Choose an avatar to start.', 'success');
+    </script>
+</body>
+</html>

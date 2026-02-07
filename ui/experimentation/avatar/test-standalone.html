@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Lip Sync Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            background: #0a0a0a;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .status {
+            padding: 12px;
+            margin: 12px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .status.loading {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+
+        .instructions {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎭 Avatar Lip Sync Test</h1>
+        <p class="subtitle">Simple standalone test - no build tools required!</p>
+
+        <div class="grid">
+            <!-- Left Panel: Controls -->
+            <div class="panel">
+                <h2>Controls</h2>
+
+                <div id="status" class="status" style="display:none;"></div>
+
+                <!-- Step 1: Choose Avatar Method -->
+                <div class="control-group">
+                    <h3>1️⃣ Choose Avatar</h3>
+
+                    <!-- Default Avatars -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button class="btn-primary" onclick="loadMaleAvatar()">
+                            👨 Male Avatar
+                        </button>
+                        <button class="btn-primary" onclick="loadFemaleAvatar()">
+                            👩 Female Avatar
+                        </button>
+                    </div>
+
+                    <!-- Custom Avatar URL -->
+                    <div style="margin-top: 16px;">
+                        <input
+                            type="text"
+                            id="customAvatarUrl"
+                            placeholder="Or paste your Ready Player Me URL..."
+                            style="width:100%; padding:12px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); border-radius:8px; color:white; font-size:14px;"
+                        />
+                        <button class="btn-secondary" onclick="loadCustomAvatar()" style="margin-top:8px;">
+                            🔗 Load Custom Avatar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Load Audio -->
+                <div class="control-group" id="audioControls" style="display:none; margin-top:20px;">
+                    <h3>2️⃣ Load Audio</h3>
+                    <input type="file" accept="audio/*" onchange="loadAudioFile(event)" />
+                    <p style="font-size:12px; color:#aaa; margin-top:8px;">
+                        Or use sample:
+                        <a href="#" onclick="loadSampleAudio(); return false;" style="color:#4CAF50;">Load Sample Audio</a>
+                    </p>
+                </div>
+
+                <!-- Step 3: Play -->
+                <div class="control-group" id="playControls" style="display:none; margin-top:20px;">
+                    <h3>3️⃣ Play with Lip Sync</h3>
+                    <button class="btn-secondary" onclick="playAudio()">
+                        ▶️ Play Audio
+                    </button>
+                    <button class="btn-danger" onclick="stopAudio()" style="display:none;" id="stopBtn">
+                        ⏹️ Stop
+                    </button>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <strong>📝 Quick Start:</strong>
+                    <ol>
+                        <li>Click "Male Avatar" or "Female Avatar"</li>
+                        <li>Upload audio file or use sample</li>
+                        <li>Click "Play Audio" - watch it talk!</li>
+                        <li>🖱️ Drag to rotate the head</li>
+                    </ol>
+
+                    <strong>🔗 Use Your Own Avatar:</strong>
+                    <ol>
+                        <li>Go to <a href="https://readyplayer.me/avatar" target="_blank" style="color:#4CAF50;">readyplayer.me</a></li>
+                        <li>Create your avatar (sign-in required)</li>
+                        <li>Copy the .glb URL from your avatar</li>
+                        <li>Paste it above and click "Load Custom Avatar"</li>
+                    </ol>
+                    <p style="font-size:11px; color:#666; margin-top:8px;">
+                        💡 Default avatars are placeholders - use your own for best results!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Avatar Display -->
+            <div class="panel">
+                <h2>Avatar Preview (Head Only)</h2>
+                <canvas id="avatarCanvas"></canvas>
+                <div id="debugInfo" style="font-size:10px; color:#666; margin-top:10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Global state
+        let scene, camera, renderer, avatar;
+        let audioContext, analyser, audio, audioSource;
+        let animationId;
+
+        // Camera orbit controls
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraAngle = { theta: 0, phi: 1.4 }; // Spherical coordinates
+        let cameraDistance = 0.5; // Distance from center (closer for head-only view)
+        let lookAtPoint = new THREE.Vector3(0, 1.65, 0); // Look at face center
+
+        // Initialize Three.js
+        function init() {
+            const canvas = document.getElementById('avatarCanvas');
+
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera - Will orbit around head (wider FOV to show full head)
+            camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            updateCameraPosition(); // Set initial position
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+
+            // Lights
+            const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambient);
+
+            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
+            directional.position.set(1, 2, 1);
+            scene.add(directional);
+
+            // Audio setup
+            audioContext = new AudioContext();
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+
+            // Mouse controls for rotating avatar
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+
+                // Update camera angle (spherical coordinates)
+                // Inverted: drag right = face turns left (from face's perspective)
+                cameraAngle.theta += deltaX * 0.01; // Horizontal orbit (inverted)
+                cameraAngle.phi -= deltaY * 0.01;   // Vertical orbit
+
+                // Limit vertical angle (don't go below or above head)
+                cameraAngle.phi = Math.max(0.5, Math.min(2.5, cameraAngle.phi));
+
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+                updateCameraPosition();
+            });
+
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                isDragging = false;
+            });
+
+            // Touch support for mobile
+            canvas.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                const touch = e.touches[0];
+                previousMousePosition = { x: touch.clientX, y: touch.clientY };
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - previousMousePosition.x;
+                const deltaY = touch.clientY - previousMousePosition.y;
+
+                // Inverted: swipe right = face turns left (from face's perspective)
+                cameraAngle.theta += deltaX * 0.01; // Inverted for natural control
+                cameraAngle.phi -= deltaY * 0.01;
+                cameraAngle.phi = Math.max(0.5, Math.min(2.5, cameraAngle.phi));
+
+                previousMousePosition = { x: touch.clientX, y: touch.clientY };
+                updateCameraPosition();
+            });
+
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+
+            // Start animation
+            animate();
+
+            showStatus('Ready! Choose male or female avatar to start.', 'success');
+        }
+
+        // Update camera position based on spherical coordinates
+        function updateCameraPosition() {
+            // Convert spherical to cartesian coordinates
+            const x = cameraDistance * Math.sin(cameraAngle.phi) * Math.cos(cameraAngle.theta);
+            const y = cameraDistance * Math.cos(cameraAngle.phi);
+            const z = cameraDistance * Math.sin(cameraAngle.phi) * Math.sin(cameraAngle.theta);
+
+            // Position camera
+            camera.position.set(
+                lookAtPoint.x + x,
+                lookAtPoint.y + y,
+                lookAtPoint.z + z
+            );
+
+            // Always look at the head center
+            camera.lookAt(lookAtPoint);
+        }
+
+        // Load male avatar (default placeholder)
+        window.loadMaleAvatar = function() {
+            // Try local file first, fallback to CDN
+            const localUrl = './assets/male.glb';
+            const cdnUrl = 'https://models.readyplayer.me/6987924e6ac2615313dd6ae4.glb?morphTargets=ARKit';
+
+            // Try local first
+            loadAvatarFromUrl(localUrl, () => {
+                // If local fails, try CDN
+                console.log('Local avatar not found, loading from CDN...');
+                loadAvatarFromUrl(cdnUrl);
+            });
+        };
+
+        // Load female avatar (default placeholder)
+        window.loadFemaleAvatar = function() {
+            // Try local file first, fallback to CDN
+            const localUrl = './assets/female.glb';
+            const cdnUrl = 'https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb?morphTargets=ARKit';
+
+            loadAvatarFromUrl(localUrl, () => {
+                console.log('Local avatar not found, loading from CDN...');
+                loadAvatarFromUrl(cdnUrl);
+            });
+        };
+
+        // Load custom avatar from URL
+        window.loadCustomAvatar = function() {
+            const input = document.getElementById('customAvatarUrl');
+            let url = input.value.trim();
+
+            if (!url) {
+                showStatus('❌ Please enter an avatar URL', 'error');
+                return;
+            }
+
+            // Remove any existing parameters first
+            url = url.split('?')[0];
+
+            // Ensure it's a .glb URL
+            if (!url.endsWith('.glb')) {
+                showStatus('❌ URL must be a .glb file from Ready Player Me', 'error');
+                return;
+            }
+
+            // Add morphTargets parameter
+            url += '?morphTargets=ARKit';
+
+            console.log('Loading custom avatar from:', url);
+            loadAvatarFromUrl(url);
+        };
+
+        // Generic avatar loader
+        function loadAvatarFromUrl(url, onErrorCallback) {
+            showStatus('Loading avatar...', 'loading');
+            console.log('Loading from URL:', url);
+
+            const loader = new GLTFLoader();
+
+            loader.load(
+                url,
+                (gltf) => {
+                    if (avatar) scene.remove(avatar.scene);
+
+                    console.log('✅ Avatar GLTF loaded successfully');
+
+                    scene.add(gltf.scene);
+                    avatar = { scene: gltf.scene, morphTargets: [] };
+
+                    // Collect all mesh names first for debugging
+                    const allMeshes = [];
+                    gltf.scene.traverse((node) => {
+                        if (node.isMesh) {
+                            allMeshes.push(node.name);
+                        }
+                    });
+                    console.log('📋 All meshes in model:', allMeshes);
+
+                    // Find morph targets and filter meshes to show only head
+                    let visibleCount = 0;
+                    let hiddenCount = 0;
+
+                    gltf.scene.traverse((node) => {
+                        if (node.isMesh) {
+                            const name = node.name.toLowerCase();
+
+                            // KEEP only head-related meshes (more permissive)
+                            const isHeadMesh =
+                                name.includes('head') ||      // Wolf3D_Head
+                                name.includes('teeth') ||     // Wolf3D_Teeth
+                                name.includes('hair') ||      // Wolf3D_Hair
+                                name.includes('eye') ||       // Eyes
+                                name.includes('eyelash') ||   // Eyelashes
+                                name.includes('beard') ||     // Beard
+                                name.includes('mustache') ||  // Mustache
+                                name.includes('glasses') ||   // Glasses
+                                name.includes('facewear');    // Facewear
+
+                            // HIDE body, clothing, and accessories
+                            if (!isHeadMesh) {
+                                node.visible = false;
+                                hiddenCount++;
+                                console.log('❌ Hidden:', node.name);
+                            } else {
+                                node.visible = true;
+                                visibleCount++;
+                                console.log('✅ Visible:', node.name);
+                            }
+
+                            // Collect morph targets from visible meshes
+                            if (node.morphTargetInfluences && isHeadMesh) {
+                                avatar.morphTargets.push(node);
+                                console.log('🎭 Morph targets found in:', node.name, '- Count:', node.morphTargetInfluences.length);
+                            }
+                        }
+                    });
+
+                    console.log(`📊 Visible meshes: ${visibleCount}, Hidden meshes: ${hiddenCount}`);
+                    console.log(`🎭 Total morph target meshes: ${avatar.morphTargets.length}`);
+
+                    if (visibleCount === 0) {
+                        console.warn('⚠️ No head meshes found! Showing all meshes...');
+                        // Fallback: show everything if no head meshes found
+                        gltf.scene.traverse((node) => {
+                            if (node.isMesh) {
+                                node.visible = true;
+                                if (node.morphTargetInfluences && avatar.morphTargets.indexOf(node) === -1) {
+                                    avatar.morphTargets.push(node);
+                                }
+                            }
+                        });
+                    }
+
+                    showStatus(`✅ Avatar loaded! (${visibleCount} visible parts, ${avatar.morphTargets.length} morph targets)`, 'success');
+                    document.getElementById('audioControls').style.display = 'block';
+                    updateDebugInfo();
+                },
+                (progress) => {
+                    // Show loading progress
+                    if (progress.lengthComputable) {
+                        const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                        showStatus(`Loading avatar... ${percent}%`, 'loading');
+                    }
+                },
+                (error) => {
+                    console.error('❌ Load error:', error);
+
+                    // If there's an error callback (for fallback), call it
+                    if (onErrorCallback) {
+                        onErrorCallback(error);
+                        return;
+                    }
+
+                    // Otherwise show error message
+                    let errorMsg = 'Failed to load avatar';
+
+                    if (error.message) {
+                        errorMsg += ': ' + error.message;
+                    }
+
+                    // Check for common errors
+                    if (url.includes('readyplayer.me')) {
+                        errorMsg += '. Make sure the URL is valid and includes ?morphTargets=ARKit';
+                    }
+
+                    showStatus('❌ ' + errorMsg, 'error');
+                }
+            );
+        }
+
+        // Load audio file
+        window.loadAudioFile = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            console.log('Loading audio file:', file.name, file.type, file.size);
+
+            const url = URL.createObjectURL(file);
+            setupAudio(url);
+            showStatus(`✅ Audio loaded! (${file.name})`, 'success');
+        };
+
+        // Load sample audio
+        window.loadSampleAudio = function() {
+            // Use a public sample audio (you can replace this)
+            const url = 'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav';
+            setupAudio(url);
+            showStatus('✅ Sample audio loaded!', 'success');
+        };
+
+        // Setup audio
+        function setupAudio(url) {
+            try {
+                if (audio) {
+                    audio.pause();
+                    audio = null;
+                }
+
+                audio = new Audio(url);
+                audio.volume = 1.0; // Max volume
+                audio.crossOrigin = 'anonymous';
+
+                // Add event listeners for debugging
+                audio.addEventListener('loadeddata', () => {
+                    console.log('✅ Audio loaded, duration:', audio.duration, 'seconds');
+                });
+
+                audio.addEventListener('playing', () => {
+                    console.log('✅ Audio started playing');
+                });
+
+                audio.addEventListener('error', (e) => {
+                    console.error('❌ Audio error:', e, audio.error);
+                    showStatus('❌ Audio error: Cannot play this file', 'error');
+                });
+
+                // Connect to audio context (only if not already connected)
+                if (!audioSource) {
+                    audioSource = audioContext.createMediaElementSource(audio);
+                    audioSource.connect(analyser);
+                    analyser.connect(audioContext.destination);
+                    console.log('✅ Audio connected to analyser');
+                }
+
+                document.getElementById('playControls').style.display = 'block';
+                console.log('✅ Audio setup complete');
+            } catch (error) {
+                console.error('❌ Setup error:', error);
+                showStatus('❌ Setup failed: ' + error.message, 'error');
+            }
+        }
+
+        // Play audio
+        window.playAudio = async function() {
+            if (!audio) {
+                showStatus('❌ No audio loaded!', 'error');
+                return;
+            }
+
+            try {
+                // IMPORTANT: Resume audio context (required by browsers)
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                    console.log('Audio context resumed');
+                }
+
+                await audio.play();
+                document.getElementById('stopBtn').style.display = 'block';
+                showStatus('🎤 Playing... (Watch the mouth!)', 'loading');
+                console.log('Audio playing');
+            } catch (error) {
+                showStatus('❌ Failed to play: ' + error.message, 'error');
+                console.error('Play error:', error);
+            }
+        };
+
+        // Stop audio
+        window.stopAudio = function() {
+            if (audio) audio.pause();
+            document.getElementById('stopBtn').style.display = 'none';
+            showStatus('Stopped', 'success');
+
+            // Reset mouth
+            if (avatar) {
+                avatar.morphTargets.forEach(mesh => {
+                    if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+                        const mouthIndex = mesh.morphTargetDictionary['mouthOpen'];
+                        if (mouthIndex !== undefined) {
+                            mesh.morphTargetInfluences[mouthIndex] = 0;
+                        }
+                    }
+                });
+            }
+        };
+
+        // Animation loop
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+
+            // Update lip sync
+            if (avatar && audio && !audio.paused) {
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                analyser.getByteFrequencyData(dataArray);
+
+                // Calculate average amplitude
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / dataArray.length;
+                const mouthOpening = Math.min(average / 128, 1);
+
+                // Apply to avatar
+                avatar.morphTargets.forEach(mesh => {
+                    if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
+                        const mouthIndex = mesh.morphTargetDictionary['mouthOpen'];
+                        const jawIndex = mesh.morphTargetDictionary['jawOpen'];
+
+                        if (mouthIndex !== undefined) {
+                            mesh.morphTargetInfluences[mouthIndex] = mouthOpening * 0.8;
+                        }
+                        if (jawIndex !== undefined) {
+                            mesh.morphTargetInfluences[jawIndex] = mouthOpening * 0.6;
+                        }
+                    }
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Helper functions
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+        }
+
+        function updateDebugInfo() {
+            if (!avatar) return;
+            const shapes = new Set();
+            avatar.morphTargets.forEach(mesh => {
+                if (mesh.morphTargetDictionary) {
+                    Object.keys(mesh.morphTargetDictionary).forEach(name => shapes.add(name));
+                }
+            });
+            document.getElementById('debugInfo').textContent =
+                `Available blend shapes: ${Array.from(shapes).join(', ')}`;
+        }
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const canvas = document.getElementById('avatarCanvas');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        });
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
