@@ -7,7 +7,6 @@
 import { BackboardClient } from "./backboard-client";
 import type { Assistant, Thread } from "./types";
 import * as fs from "fs/promises";
-import * as path from "path";
 
 export interface EchoConfig {
   apiKey: string;
@@ -131,7 +130,7 @@ Remember: You are representing this person's digital identity. Be thoughtful and
   getIds(): { assistantId: string | null; threadId: string | null } {
     return {
       assistantId: this.assistant?.assistant_id || null,
-      threadId: this.thread?.assistant_id || null,
+      threadId: this.thread?.thread_id || null,
     };
   }
 

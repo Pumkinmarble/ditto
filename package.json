@@ -1,35 +1,46 @@
 {
-  "name": "echo-ai-twin",
+  "name": "echo-ai-digital-twin",
   "version": "0.1.0",
-  "description": "Echo - AI-powered digital twin that learns personality through diary entries",
-  "main": "index.js",
+  "description": "Echo - AI-powered digital twin with personality, voice, and 3D avatar",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "ai:test": "tsx AI/test.ts",
-    "ai:debug": "tsx AI/debug-api.ts"
+    "ai:test": "tsx AI/test.ts"
   },
   "keywords": [
     "ai",
     "digital-twin",
     "backboard",
-    "gemini"
+    "gemini",
+    "elevenlabs",
+    "ready-player-me",
+    "avatar"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@auth0/nextjs-auth0": "^3.5.0",
+    "@react-three/drei": "^9.105.0",
+    "@react-three/fiber": "^8.16.0",
+    "@supabase/supabase-js": "^2.39.0",
     "dotenv": "^16.4.5",
-    "next": "^15.1.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next": "^14.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "three": "^0.163.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "@types/react": "^19.0.6",
-    "@types/react-dom": "^19.0.2",
-    "typescript": "^5.7.3",
-    "tsx": "^4.19.2"
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.163.0",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

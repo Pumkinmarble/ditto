@@ -5,17 +5,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Client for browser/client-side operations (using anon key)
+// Client for browser/client-side operations (using publishable key)
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 );
 
-// Admin client for server-side operations (using service role key)
+// Admin client for server-side operations (using secret key)
 // Has full access, bypasses RLS - use carefully!
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!,
+  process.env.SUPABASE_SECRET_KEY!,
   {
     auth: {
       autoRefreshToken: false,

@@ -12,7 +12,7 @@ import { EchoService } from "./echo-service";
 import * as fs from "fs/promises";
 
 // Load environment variables
-dotenv.config({ path: path.join(__dirname, "../.env.local") });
+dotenv.config({ path: path.join(__dirname, ".env.local") });
 
 async function main() {
   console.log("🚀 Echo AI Digital Twin - Test Script\n");
