@@ -27,6 +27,8 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [questionText, setQuestionText] = useState('');
+  const [questionSaving, setQuestionSaving] = useState(false);
 
   // Fetch user ID when user logs in
   useEffect(() => {
@@ -393,6 +395,49 @@ export default function HomePage() {
         isPopupOpen={selectedButton !== null}
         audioLevel={audioLevel}
       />
+
+      {/* Question input below Ditto */}
+      <div
+        className="absolute left-1/2 z-30"
+        style={{ top: '68%', transform: 'translateX(-50%)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <form
+          className="flex items-center gap-2"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!questionText.trim() || questionSaving) return;
+            setQuestionSaving(true);
+            try {
+              await fetch('/api/save-question', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: questionText }),
+              });
+              setQuestionText('');
+            } catch (err) {
+              console.error('Failed to save question:', err);
+            }
+            setQuestionSaving(false);
+          }}
+        >
+          <input
+            type="text"
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+            placeholder="Ask Ditto a question..."
+            className="rounded-lg px-4 py-3 text-sm text-gray-800 outline-none w-80 bg-white/60 backdrop-blur-md border border-gray-200 shadow-md"
+          />
+          <button
+            type="submit"
+            disabled={questionSaving || !questionText.trim()}
+            className="acrylic-button rounded-lg px-4 py-3 font-semibold text-gray-800 text-sm relative z-10 disabled:opacity-40"
+            style={{ transform: 'none' }}
+          >
+            {questionSaving ? '...' : 'Send'}
+          </button>
+        </form>
+      </div>
 
       {/* Backdrop blur when popup is open */}
       <div
