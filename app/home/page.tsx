@@ -25,6 +25,7 @@ export default function HomePage() {
   const wordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   // Handle Escape key to close popup
   useEffect(() => {
@@ -231,14 +232,32 @@ export default function HomePage() {
 
           {/* Menu content */}
           <div
+            className="flex flex-col justify-end"
             style={{
               opacity: menuOpen ? 1 : 0,
               transition: 'opacity 0.2s ease',
               transitionDelay: menuOpen ? '0.2s' : '0s',
               pointerEvents: menuOpen ? 'auto' : 'none',
+              height: menuOpen ? 'calc(100% - 48px)' : '0',
             }}
           >
+            <div className="flex-1" />
             <div style={{ borderTop: '1px solid rgba(168, 85, 247, 0.1)' }} />
+            <button
+              className="block w-full px-3 py-2 text-sm font-semibold text-gray-800 text-left transition-colors relative z-10 rounded-b-lg"
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                e.currentTarget.style.color = '#ef4444';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '';
+              }}
+              onClick={() => setShowClearConfirm(true)}
+            >
+              Clear Data
+            </button>
           </div>
         </div>
       </div>
@@ -444,6 +463,74 @@ export default function HomePage() {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         />
+      )}
+      {/* Clear Data Confirmation Modal */}
+      {showClearConfirm && (
+        <div
+          className="fixed inset-0 flex items-center justify-center pb-24"
+          style={{ zIndex: 60 }}
+          onClick={() => setShowClearConfirm(false)}
+        >
+          <div
+            className="fixed inset-0"
+            style={{
+              backdropFilter: 'blur(8px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.15)',
+            }}
+          />
+          <div
+            className="acrylic-button rounded-lg relative"
+            style={{ padding: 0, transform: 'none', width: '320px' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-5 text-center">
+              <p className="text-base font-semibold text-black">
+                Clear all data?
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                This deletes all data inputted for this instance. This action cannot be undone.
+              </p>
+            </div>
+            <div
+              className="flex"
+              style={{ borderTop: '1px solid rgba(168, 85, 247, 0.1)' }}
+            >
+              <button
+                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-bl-lg"
+                style={{ background: 'transparent' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Cancel
+              </button>
+              <div style={{ width: '1px', background: 'rgba(168, 85, 247, 0.1)' }} />
+              <button
+                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-br-lg"
+                style={{ background: 'transparent' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                  e.currentTarget.style.color = '#ef4444';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '';
+                }}
+                onClick={() => {
+                  // TODO: Add clear data logic
+                  setShowClearConfirm(false);
+                  setMenuOpen(false);
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
