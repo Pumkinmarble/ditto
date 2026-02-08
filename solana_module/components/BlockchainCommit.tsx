@@ -19,12 +19,14 @@ interface Props {
   twinData: CommitData;
   onSuccess?: (signature: string) => void;
   onError?: (error: Error) => void;
+  darkMode?: boolean;
 }
 
-export default function BlockchainCommit({ twinData, onSuccess, onError }: Props) {
+export default function BlockchainCommit({ twinData, onSuccess, onError, darkMode = false }: Props) {
   const [committing, setCommitting] = useState(false);
   const [txSignature, setTxSignature] = useState<string | null>(null);
-  const { publicKey, sendTransaction } = useWallet();
+  const [isMockMode, setIsMockMode] = useState(false);
+  const { publicKey, sendTransaction, wallet } = useWallet();
   const { connection } = useConnection();
 
   const handleCommit = async () => {
@@ -38,6 +40,10 @@ export default function BlockchainCommit({ twinData, onSuccess, onError }: Props
       return;
     }
 
+    // Check if using mock wallet
+    const usingMockWallet = wallet?.adapter?.name === 'Mock Wallet (Dev Only)';
+    setIsMockMode(usingMockWallet);
+
     setCommitting(true);
     try {
       // Prepare commitment data
@@ -48,31 +54,49 @@ export default function BlockchainCommit({ twinData, onSuccess, onError }: Props
         voiceData: twinData.voiceData,
       };
 
-      // Call API to create transaction
-      const response = await fetch('/api/blockchain/commit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(commitData),
-      });
+      if (usingMockWallet) {
+        // Mock wallet mode - simulate transaction
+        console.log('🎭 Mock Wallet Mode: Simulating blockchain commitment');
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
 
-      const data = await response.json();
+        // Generate a mock transaction signature
+        const mockSignature = 'MOCK_TX_' + Math.random().toString(36).substring(2, 15) +
+                             Math.random().toString(36).substring(2, 15);
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to create transaction');
+        console.log('🎭 Mock Transaction Signature:', mockSignature);
+        console.log('🎭 Commitment Data:', commitData);
+
+        setTxSignature(mockSignature);
+        onSuccess?.(mockSignature);
+      } else {
+        // Real wallet mode - actual blockchain transaction
+        // Call API to create transaction
+        const response = await fetch('/api/blockchain/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(commitData),
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to create transaction');
+        }
+
+        // Deserialize and send transaction
+        const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
+        const signature = await sendTransaction(transaction, connection);
+
+        // Wait for confirmation
+        await connection.confirmTransaction(signature, 'confirmed');
+
+        setTxSignature(signature);
+        onSuccess?.(signature);
       }
-
-      // Deserialize and send transaction
-      const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
-      const signature = await sendTransaction(transaction, connection);
-
-      // Wait for confirmation
-      await connection.confirmTransaction(signature, 'confirmed');
-
-      setTxSignature(signature);
-      onSuccess?.(signature);
     } catch (error) {
       console.error('Error committing to blockchain:', error);
       onError?.(error as Error);
+      alert('Commitment failed: ' + (error as Error).message);
     } finally {
       setCommitting(false);
     }
@@ -84,13 +108,16 @@ export default function BlockchainCommit({ twinData, onSuccess, onError }: Props
       <button
         onClick={handleCommit}
         disabled={!publicKey || committing}
-        className={`w-full py-4 rounded-lg font-semibold transition ${
+        className={`w-full py-4 rounded-lg font-semibold transition-all duration-700 ease-in-out relative z-0 ${
           !publicKey || committing
-            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-            : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:opacity-90'
+            ? 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
+            : `acrylic-button ${darkMode ? 'text-gray-200' : 'text-gray-800'}`
         }`}
+        style={!publicKey || committing ? {} : { transform: 'none' }}
       >
-        {committing ? 'Committing to Blockchain...' : 'Lock Your Twin Forever on Blockchain'}
+        <span className="relative z-10">
+          {committing ? 'Committing to Blockchain...' : 'Lock Your Twin Forever on Blockchain'}
+        </span>
       </button>
 
       {/* Success Message */}
@@ -102,19 +129,25 @@ export default function BlockchainCommit({ twinData, onSuccess, onError }: Props
           }}
         >
           <p className="text-sm font-semibold text-green-800 mb-2">
-            ✅ Successfully committed to blockchain!
+            {isMockMode ? '🎭 Mock commitment successful!' : '✅ Successfully committed to blockchain!'}
           </p>
           <p className="text-xs text-green-700 mb-2 font-mono break-all">
             Transaction: {txSignature}
           </p>
-          <a
-            href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-blue-600 hover:underline"
-          >
-            View on Solana Explorer →
-          </a>
+          {isMockMode ? (
+            <p className="text-xs text-orange-600">
+              ⚠️ This is a simulated transaction (Mock Wallet mode). Install Phantom for real blockchain commits.
+            </p>
+          ) : (
+            <a
+              href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline"
+            >
+              View on Solana Explorer →
+            </a>
+          )}
         </div>
       )}
 

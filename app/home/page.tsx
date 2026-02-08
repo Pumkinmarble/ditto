@@ -6,6 +6,7 @@ import { useUser } from '@auth0/nextjs-auth0/client';
 import PersonalityQuizPopup from './components/PersonalityQuizPopup';
 import DiaryPopup from './components/DiaryPopup';
 import VoiceClonePopup from './components/VoiceClonePopup';
+import BlockchainPopup from './components/BlockchainPopup';
 
 const DittoCharacter = dynamic(() => import('./components/DittoCharacter'), {
   ssr: false,
@@ -288,6 +289,34 @@ export default function HomePage() {
             }}
           >
             <div className="flex-1" />
+            {/* Blockchain button */}
+            <button
+              className={`flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-left transition-colors relative z-10 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = darkMode
+                  ? 'rgba(192, 192, 192, 0.1)'
+                  : 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(false);
+                if (selectedButton === 'blockchain') {
+                  setShowPopup(false);
+                  setTimeout(() => setSelectedButton(null), 400);
+                } else {
+                  setSelectedButton('blockchain');
+                  setTimeout(() => setShowPopup(true), 300);
+                }
+              }}
+            >
+              <span>Blockchain</span>
+              <span className="text-base">🔗</span>
+            </button>
+            <div style={{ borderTop: `1px solid ${darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)'}` }} />
             {/* Dark/Light mode toggle */}
             <button
               className={`flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-left transition-colors relative z-10 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
@@ -558,12 +587,6 @@ export default function HomePage() {
         >
           <span className="relative z-10">Voice Cloning</span>
         </button>
-        <button
-          onClick={handleTestVoice}
-          className={`acrylic-button px-8 py-4 rounded-lg font-semibold relative z-0 transition-all duration-700 ease-in-out ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
-        >
-          <span className="relative z-10">Test Voice</span>
-        </button>
       </div>
 
       {/* Popups */}
@@ -604,6 +627,24 @@ export default function HomePage() {
           darkMode={darkMode}
         />
       )}
+
+      {/* Blockchain popup */}
+      {selectedButton === 'blockchain' && (
+        <BlockchainPopup
+          isOpen={showPopup}
+          onClose={() => {
+            setShowPopup(false);
+            setTimeout(() => setSelectedButton(null), 400);
+          }}
+          mousePos={mousePos}
+          isHovering={false}
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => {}}
+          onMouseLeave={() => {}}
+          darkMode={darkMode}
+        />
+      )}
+
       {/* Clear Data Confirmation Modal */}
       {showClearConfirm && (
         <div

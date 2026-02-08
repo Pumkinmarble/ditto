@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { UserProvider } from '@auth0/nextjs-auth0/client';
+import WalletProvider from '@/solana_module/components/WalletProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <UserProvider>
-          {children}
+          <WalletProvider>
+            {children}
+          </WalletProvider>
         </UserProvider>
       </body>
     </html>

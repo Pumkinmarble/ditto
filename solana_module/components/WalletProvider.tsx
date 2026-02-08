@@ -16,6 +16,7 @@ import {
   SolflareWalletAdapter,
   TorusWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
+import { MockWalletAdapter } from '../lib/mockWallet';
 
 // Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -31,9 +32,10 @@ export default function WalletProvider({ children }: Props) {
     []
   );
 
-  // Configure supported wallets
+  // Configure supported wallets (Mock wallet first for easy testing)
   const wallets = useMemo(
     () => [
+      new MockWalletAdapter(), // 🎭 Mock wallet for testing (no installation needed!)
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
       new TorusWalletAdapter(),

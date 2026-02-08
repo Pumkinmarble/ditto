@@ -11,7 +11,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export default function WalletConnect() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, disconnect, wallet } = useWallet();
   const { connection } = useConnection();
   const [balance, setBalance] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,6 +37,15 @@ export default function WalletConnect() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDisconnect = async () => {
+    // Clear wallet adapter's localStorage cache
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('walletName');
+    }
+    // Disconnect the wallet
+    await disconnect();
   };
 
   return (
@@ -88,7 +97,21 @@ export default function WalletConnect() {
                 <p className="text-sm text-gray-600">Network</p>
                 <p className="text-sm text-gray-800">Devnet</p>
               </div>
+
+              {/* Wallet Name */}
+              <div>
+                <p className="text-sm text-gray-600">Connected Wallet</p>
+                <p className="text-sm text-gray-800">{wallet?.adapter?.name || 'Unknown'}</p>
+              </div>
             </div>
+
+            {/* Disconnect/Change Wallet Button */}
+            <button
+              onClick={handleDisconnect}
+              className="mt-3 w-full py-2 px-4 rounded-lg text-sm font-medium text-gray-700 bg-white/50 hover:bg-white/80 border border-gray-300 transition"
+            >
+              Disconnect & Change Wallet
+            </button>
           </div>
         )}
 
