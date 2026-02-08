@@ -12,20 +12,30 @@ export default function HomePage() {
   const [showPopup, setShowPopup] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Handle Escape key to close popup
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedButton) {
-        e.preventDefault(); // Prevent default Escape behavior (focus shifting)
-        setShowPopup(false);
-        setTimeout(() => setSelectedButton(null), 400);
+      if (e.key === 'Escape') {
+        if (menuOpen) {
+          setMenuOpen(false);
+        }
+        if (showProfileMenu) {
+          setShowProfileMenu(false);
+        }
+        if (selectedButton) {
+          e.preventDefault();
+          setShowPopup(false);
+          setTimeout(() => setSelectedButton(null), 400);
+        }
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [selectedButton]);
+  }, [selectedButton, showProfileMenu, menuOpen]);
 
   const handleButtonClick = (e: React.MouseEvent, buttonName: string) => {
     e.stopPropagation(); // Prevent background click
@@ -46,6 +56,12 @@ export default function HomePage() {
   };
 
   const handleBackgroundClick = () => {
+    if (menuOpen) {
+      setMenuOpen(false);
+    }
+    if (showProfileMenu) {
+      setShowProfileMenu(false);
+    }
     if (selectedButton) {
       // Close popup first, then reset button
       setShowPopup(false);
@@ -98,40 +114,147 @@ export default function HomePage() {
       style={{ background: '#FFF8F0' }}
       onClick={handleBackgroundClick}
     >
-      {/* Logout Section - Top Right */}
-      <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
+      {/* Hamburger Menu - Top Left */}
+      <div className="absolute top-6 left-6 z-30">
+        <div
+          className="acrylic-button rounded-lg overflow-hidden"
+          style={{
+            width: menuOpen ? '280px' : '48px',
+            height: menuOpen ? '300px' : '48px',
+            padding: 0,
+            transition: 'width 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Toggle button area */}
+          <button
+            className="w-12 h-12 flex flex-col items-center justify-center relative z-10"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {/* Line 1 → top of X */}
+            <span
+              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
+              style={{
+                transform: menuOpen ? 'rotate(45deg)' : 'translateY(-6px)',
+              }}
+            />
+            {/* Line 2 → fades out */}
+            <span
+              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
+              style={{
+                opacity: menuOpen ? 0 : 1,
+                transform: menuOpen ? 'scaleX(0)' : 'scaleX(1)',
+              }}
+            />
+            {/* Line 3 → bottom of X */}
+            <span
+              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
+              style={{
+                transform: menuOpen ? 'rotate(-45deg)' : 'translateY(6px)',
+              }}
+            />
+          </button>
+
+          {/* Menu content */}
+          <div
+            style={{
+              opacity: menuOpen ? 1 : 0,
+              transition: 'opacity 0.2s ease',
+              transitionDelay: menuOpen ? '0.2s' : '0s',
+              pointerEvents: menuOpen ? 'auto' : 'none',
+            }}
+          >
+            <div style={{ borderTop: '1px solid rgba(168, 85, 247, 0.1)' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Picture - Top Right */}
+      <div className="absolute top-6 right-6 z-30">
         {user ? (
-          <>
-            {/* User Info */}
-            <div className="flex items-center gap-3 acrylic-button px-4 py-2 rounded-lg">
-              {user.picture && (
+          <div className="relative flex flex-col items-end">
+            {/* Circular Profile Picture */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowProfileMenu(!showProfileMenu);
+              }}
+              className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-lg hover:shadow-xl transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 relative z-10"
+            >
+              {user.picture ? (
                 <img
                   src={user.picture}
                   alt={user.name || 'User'}
-                  className="w-8 h-8 rounded-full"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
                 />
+              ) : (
+                <div className="w-full h-full bg-orange-200 flex items-center justify-center text-orange-700 font-bold text-lg">
+                  {(user.name || user.email || '?').charAt(0).toUpperCase()}
+                </div>
               )}
-              <div className="flex flex-col">
-                <span className="text-sm font-semibold text-gray-800">
-                  {user.name || user.email}
-                </span>
-              </div>
-            </div>
+            </button>
 
-            {/* Logout Button */}
-            <a
-              href="/api/auth/logout"
-              className="acrylic-button px-4 py-2 rounded-lg font-semibold text-gray-800 hover:bg-red-50 transition-colors relative z-10"
+            {/* Dropdown Menu - speech bubble style */}
+            <div
+              className="absolute"
+              style={{
+                top: '50px',
+                right: '50px',
+                transformOrigin: 'top right',
+                transform: showProfileMenu ? 'scale(1)' : 'scale(0)',
+                opacity: showProfileMenu ? 1 : 0,
+                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease',
+                pointerEvents: showProfileMenu ? 'auto' : 'none',
+              }}
               onClick={(e) => e.stopPropagation()}
             >
-              Logout
-            </a>
-          </>
+              {/* Triangle tip pointing up toward bottom-left of profile pic */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: 'calc(100% - 24px)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderBottom: '8px solid rgba(255,255,255,0.85)',
+                }}
+              />
+              <div
+                className="w-52 rounded-lg rounded-tr-none acrylic-button"
+                style={{ padding: 0, transform: 'none' }}
+              >
+                <div className="px-3 py-2" style={{ borderBottom: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                  <p className="text-sm font-semibold text-gray-800 truncate">
+                    {user.name || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email}
+                  </p>
+                </div>
+                <a
+                  href="/api/auth/logout"
+                  className="block px-3 py-2 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-b-lg"
+                  style={{ background: 'transparent' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  Logout
+                </a>
+              </div>
+            </div>
+          </div>
         ) : (
           /* Dev Mode - Back to Login Button */
           <a
             href="/login"
-            className="acrylic-button p-2 rounded-lg hover:bg-gray-100 transition-colors relative z-10"
+            className="w-12 h-12 rounded-full bg-white/70 backdrop-blur-md border border-gray-200 shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
             onClick={(e) => e.stopPropagation()}
             title="Back to Login"
           >
