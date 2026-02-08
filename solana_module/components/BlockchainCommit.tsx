@@ -108,7 +108,7 @@ export default function BlockchainCommit({ twinData, onSuccess, onError, darkMod
       <button
         onClick={handleCommit}
         disabled={!publicKey || committing}
-        className={`w-full py-4 rounded-lg font-semibold transition-all duration-700 ease-in-out relative z-0 ${
+        className={`w-full py-4 rounded-xl font-semibold transition-all duration-700 ease-in-out relative z-0 ${
           !publicKey || committing
             ? 'bg-gray-300 text-gray-600 cursor-not-allowed opacity-50'
             : `acrylic-button ${darkMode ? 'text-gray-200' : 'text-gray-800'}`

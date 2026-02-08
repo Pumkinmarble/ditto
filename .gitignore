@@ -81,3 +81,7 @@ ui/experimentation/avatar/public/avatars/*.glb
 quiz-answers/
 diary-entries/
 voice-recordings/
+
+*.md
+
+/experiments

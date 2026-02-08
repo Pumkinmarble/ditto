@@ -9,6 +9,7 @@ interface DiaryPopupProps {
   onClose: () => void;
   userId: string | null;
   darkMode: boolean;
+  onSavingChange?: (saving: boolean) => void;
 }
 
 export default function DiaryPopup({
@@ -16,6 +17,7 @@ export default function DiaryPopup({
   onClose,
   userId,
   darkMode,
+  onSavingChange,
 }: DiaryPopupProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentFont, setCurrentFont] = useState('Arial');
@@ -65,6 +67,7 @@ export default function DiaryPopup({
       setShowToast(true);
       return;
     }
+    onSavingChange?.(true);
     try {
       await fetch('/api/save-diary', {
         method: 'POST',
@@ -83,6 +86,7 @@ export default function DiaryPopup({
       setToastType('error');
       setShowToast(true);
     }
+    onSavingChange?.(false);
   };
 
   // Theme-dependent styles

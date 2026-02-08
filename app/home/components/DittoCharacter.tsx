@@ -51,7 +51,7 @@ function DittoBlob({ mousePos, isPopupOpen, audioLevel = 0 }: DittoCharacterProp
     const proximity = Math.max(0, 1 - dist);
 
     // Animate distortion: base 0.2 + up to 0.25 extra when cursor is near
-    const targetDistort = isPopupOpen ? 0.05 : 0.08 + proximity * 0.1;
+    const targetDistort = 0.08 + proximity * 0.1;
     materialRef.current.distort = THREE.MathUtils.lerp(
       materialRef.current.distort,
       targetDistort,
@@ -130,7 +130,7 @@ export default function DittoCharacter({ mousePos, isPopupOpen, audioLevel }: Di
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: `translate(-50%, -70%) scale(${isPopupOpen ? 0.8 : 1})`,
+        transform: 'translate(-50%, -70%)',
         width: '500px',
         height: '500px',
         zIndex: 30,

@@ -182,6 +182,16 @@ body {
   color: #E5E7EB !important;
 }
 
+/* Loading cursor spinner */
+@keyframes cursor-spin {
+  to { transform: rotate(360deg); }
+}
+
+.submitting-cursor,
+.submitting-cursor * {
+  cursor: none !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

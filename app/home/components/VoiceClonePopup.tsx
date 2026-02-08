@@ -8,6 +8,7 @@ interface VoiceClonePopupProps {
   onClose: () => void;
   userId: string | null;
   darkMode: boolean;
+  onSavingChange?: (saving: boolean) => void;
 }
 
 export default function VoiceClonePopup({
@@ -15,6 +16,7 @@ export default function VoiceClonePopup({
   onClose,
   userId,
   darkMode,
+  onSavingChange,
 }: VoiceClonePopupProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -192,6 +194,7 @@ export default function VoiceClonePopup({
       setShowToast(true);
       return;
     }
+    onSavingChange?.(true);
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, `${userId}.webm`);
@@ -218,6 +221,7 @@ export default function VoiceClonePopup({
       setToastType('error');
       setShowToast(true);
     }
+    onSavingChange?.(false);
   };
 
   const formatTime = (seconds: number) => {

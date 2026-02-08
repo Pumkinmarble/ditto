@@ -25,10 +25,21 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center" style={{ background: '#FFF8F0' }}>
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md relative">
+        {/* Purple semicircle resting on top of card */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 -top-[60px] z-10"
+          style={{
+            width: '120px',
+            height: '60px',
+            borderRadius: '60px 60px 0 0',
+            background: 'linear-gradient(180deg, #A855F7, #7C3AED)',
+            boxShadow: '0 -4px 12px rgba(168, 85, 247, 0.3)',
+          }}
+        />
         {/* Login Card */}
         <div
-          className="rounded-2xl shadow-xl p-8 border border-white/20"
+          className="rounded-2xl shadow-xl p-8 border border-white/20 relative z-0"
           style={{
             background: `
               linear-gradient(90deg,
@@ -72,7 +83,7 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Development Only Divider */}
+          {/* Dev Mode Bypass — uncomment to re-enable:
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -81,14 +92,13 @@ export default function LoginPage() {
               <span className="px-2 text-gray-500" style={{ backgroundColor: '#FFF8F0' }}>Development Only</span>
             </div>
           </div>
-
-          {/* Dev Mode Bypass Button */}
           <button
             onClick={() => router.push('/home')}
             className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition border border-gray-300"
           >
             Skip Login (Dev Mode)
           </button>
+          */}
 
           {/* Info Text */}
           <p className="text-center text-sm text-gray-600 mt-6">
@@ -96,6 +106,17 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Authors - fixed to bottom */}
+      <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-xs text-black">
+        <a href="https://www.linkedin.com/in/harrisonyuuw/" target="_blank" rel="noopener noreferrer" className="underline">Harrison Yu</a>
+        {' '}&middot;{' '}
+        <a href="https://www.linkedin.com/in/kartheek-chinta23/" target="_blank" rel="noopener noreferrer" className="underline">Kartheek China</a>
+        {' '}&middot;{' '}
+        <a href="https://www.linkedin.com/in/khush-patel27/" target="_blank" rel="noopener noreferrer" className="underline">Khush Patel</a>
+        {' '}&middot;{' '}
+        <a href="https://www.linkedin.com/in/rishichakrabarty/" target="_blank" rel="noopener noreferrer" className="underline">Rishi Chakrabarty</a>
+      </p>
     </main>
   );
 }
