@@ -407,16 +407,70 @@ export default function HomePage() {
           onSubmit={async (e) => {
             e.preventDefault();
             if (!questionText.trim() || questionSaving) return;
+            if (!userId) return;
             setQuestionSaving(true);
             try {
-              await fetch('/api/save-question', {
+              // Get text answer from Backboard
+              const res = await fetch('/api/save-question', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: questionText }),
+                body: JSON.stringify({ question: questionText, userId }),
               });
-              setQuestionText('');
+              const data = await res.json();
+              if (data.success) {
+                setQuestionText('');
+
+                // Speak the answer with cloned voice
+                try {
+                  const audioRes = await fetch('/api/voice/speak', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: data.answer, userId }),
+                  });
+
+                  if (audioRes.ok) {
+                    const audioBlob = await audioRes.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+
+                    // Animate mouth using audio analysis
+                    const audioCtx = new AudioContext();
+                    const source = audioCtx.createMediaElementSource(audio);
+                    const analyser = audioCtx.createAnalyser();
+                    analyser.fftSize = 256;
+                    source.connect(analyser);
+                    analyser.connect(audioCtx.destination);
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                    audio.onplay = () => {
+                      setIsSpeaking(true);
+                      const animateMouth = () => {
+                        if (audio.paused || audio.ended) return;
+                        analyser.getByteFrequencyData(dataArray);
+                        const avg = dataArray.slice(0, 20).reduce((a, b) => a + b, 0) / 20;
+                        mouthTargetRef.current = Math.min(1, avg / 128);
+                        requestAnimationFrame(animateMouth);
+                      };
+                      startMouthLoop();
+                      animateMouth();
+                    };
+
+                    audio.onended = () => {
+                      stopMouthAnim();
+                      audioCtx.close();
+                      URL.revokeObjectURL(audioUrl);
+                    };
+
+                    audio.play();
+                  }
+                } catch (voiceErr) {
+                  console.warn('Voice playback failed:', voiceErr);
+                }
+              } else {
+                setQuestionText('');
+              }
             } catch (err) {
-              console.error('Failed to save question:', err);
+              console.error('Failed to ask question:', err);
             }
             setQuestionSaving(false);
           }}
