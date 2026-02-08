@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import PersonalityQuizPopup from './components/PersonalityQuizPopup';
@@ -16,6 +17,7 @@ const DittoCharacter = dynamic(() => import('./components/DittoCharacter'), {
 
 export default function HomePage() {
   const { user } = useUser();
+  const router = useRouter();
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -240,7 +242,7 @@ export default function HomePage() {
           className="acrylic-button rounded-lg overflow-hidden"
           style={{
             width: menuOpen ? '280px' : '48px',
-            height: menuOpen ? (settingsOpen ? '290px' : '220px') : '48px',
+            height: menuOpen ? (settingsOpen ? '300px' : '250px') : '48px',
             padding: 0,
             transition: 'width 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
@@ -315,6 +317,29 @@ export default function HomePage() {
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </button>
+            <button
+              className={`flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-left transition-colors relative z-10 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = darkMode
+                  ? 'rgba(192, 192, 192, 0.1)'
+                  : 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen(false);
+                router.push('/gallery');
+              }}
+            >
+              <span>Community Gallery</span>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="M12 5l7 7-7 7" />
               </svg>
             </button>
             <div style={{ borderTop: `1px solid ${darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)'}` }} />

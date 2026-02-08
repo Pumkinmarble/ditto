@@ -13,6 +13,7 @@ interface ProfileResponse {
   user?: {
     solanaTxHash?: string | null;
     blockchainCommittedAt?: string | null;
+    showInGallery?: boolean | null;
   };
 }
 
@@ -26,6 +27,8 @@ export default function SolanaInfoPopup({
   const [timestamp, setTimestamp] = useState('');
   const [txSignature, setTxSignature] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showInGallery, setShowInGallery] = useState(false);
+  const [savingGallery, setSavingGallery] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -40,6 +43,8 @@ export default function SolanaInfoPopup({
         } else {
           setTxSignature(null);
         }
+
+        setShowInGallery(!!data?.user?.showInGallery);
 
         if (data?.user?.blockchainCommittedAt) {
           setTimestamp(new Date(data.user.blockchainCommittedAt).toLocaleString('en-US', {
@@ -68,6 +73,29 @@ export default function SolanaInfoPopup({
   const displaySignature = (sig: string) => {
     if (sig.length <= 16) return sig;
     return `${sig.slice(0, 6)}...${sig.slice(-6)}`;
+  };
+
+  const handleGalleryToggle = async () => {
+    const nextValue = !showInGallery;
+    setSavingGallery(true);
+    setShowInGallery(nextValue);
+    try {
+      const response = await fetch('/api/user/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showInGallery: nextValue }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update gallery preference');
+      }
+    } catch (error) {
+      console.error(error);
+      setShowInGallery(!nextValue);
+      alert('Unable to update gallery preference. Please try again.');
+    } finally {
+      setSavingGallery(false);
+    }
   };
 
   const popupBg = darkMode
@@ -169,6 +197,29 @@ export default function SolanaInfoPopup({
                 {loading ? 'Loading…' : timestamp}
               </span>
             </div>
+          </div>
+
+          {/* Gallery opt-in */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className={`text-sm font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                Community Gallery
+              </p>
+              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Show your verified twin publicly
+              </p>
+            </div>
+            <button
+              onClick={handleGalleryToggle}
+              disabled={savingGallery}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                showInGallery
+                  ? 'bg-green-500 text-white'
+                  : darkMode ? 'bg-white/10 text-gray-300' : 'bg-black/[0.04] text-gray-700'
+              } ${savingGallery ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              {showInGallery ? 'Visible' : 'Hidden'}
+            </button>
           </div>
 
           {/* Transaction signatures */}

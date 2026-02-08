@@ -45,6 +45,7 @@ export interface User {
   wallet_address?: string;
   solana_tx_hash?: string;
   blockchain_committed_at?: string;
+  show_in_gallery?: boolean;
   created_at: string;
   updated_at: string;
   last_login_at: string;
@@ -194,6 +195,38 @@ export async function updateBlockchainCommitment(
     solana_tx_hash: txHash,
     blockchain_committed_at: new Date().toISOString(),
   });
+}
+
+/**
+ * Update gallery opt-in
+ */
+export async function updateGalleryOptIn(
+  auth0Id: string,
+  showInGallery: boolean
+): Promise<void> {
+  await updateUser(auth0Id, { show_in_gallery: showInGallery });
+}
+
+/**
+ * Get public gallery entries
+ */
+export async function getGalleryEntries(limit = 50): Promise<Array<{
+  id: string;
+  name?: string;
+  picture?: string;
+  solana_tx_hash?: string;
+  blockchain_committed_at?: string;
+}>> {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('id, name, picture, solana_tx_hash, blockchain_committed_at')
+    .eq('show_in_gallery', true)
+    .not('solana_tx_hash', 'is', null)
+    .order('blockchain_committed_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
 }
 
 /**

@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
         walletAddress: user.wallet_address,
         solanaTxHash: user.solana_tx_hash,
         blockchainCommittedAt: user.blockchain_committed_at,
+        showInGallery: user.show_in_gallery ?? false,
         createdAt: user.created_at,
         lastLoginAt: user.last_login_at,
       },

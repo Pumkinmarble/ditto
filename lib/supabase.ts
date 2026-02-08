@@ -47,6 +47,7 @@ export interface User {
   wallet_address: string | null;
   solana_tx_hash: string | null;
   blockchain_committed_at: string | null;
+  show_in_gallery?: boolean | null;
   created_at: string;
   updated_at: string;
   last_login_at: string;
