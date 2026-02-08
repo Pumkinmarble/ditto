@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import PersonalityQuizPopup from './components/PersonalityQuizPopup';
 import DiaryPopup from './components/DiaryPopup';
 import VoiceClonePopup from './components/VoiceClonePopup';
+
+const DittoCharacter = dynamic(() => import('./components/DittoCharacter'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function HomePage() {
   const { user } = useUser();
@@ -12,20 +18,87 @@ export default function HomePage() {
   const [showPopup, setShowPopup] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const mouthTargetRef = useRef(0);
+  const animFrameRef = useRef<number>(0);
+  const wordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Handle Escape key to close popup
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && selectedButton) {
-        e.preventDefault(); // Prevent default Escape behavior (focus shifting)
+        e.preventDefault();
         setShowPopup(false);
         setTimeout(() => setSelectedButton(null), 400);
       }
     };
 
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      cancelAnimationFrame(animFrameRef.current);
+    };
   }, [selectedButton]);
+
+  // Smooth mouth animation loop — lerps toward mouthTargetRef
+  const startMouthLoop = useCallback(() => {
+    const animate = () => {
+      setAudioLevel((prev) => {
+        const target = mouthTargetRef.current;
+        const next = prev + (target - prev) * 0.35;
+        // Snap to 0 when close enough
+        if (target === 0 && next < 0.02) return 0;
+        return next;
+      });
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    animFrameRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  const stopMouthAnim = useCallback(() => {
+    cancelAnimationFrame(animFrameRef.current);
+    if (wordTimerRef.current) clearTimeout(wordTimerRef.current);
+    mouthTargetRef.current = 0;
+    setAudioLevel(0);
+    setIsSpeaking(false);
+  }, []);
+
+  const handleTestVoice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isSpeaking) return;
+
+    const text = "Hi! I'm Ditto, your digital twin. I can talk, move, and even jiggle when you get close to me!";
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1.2;
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      startMouthLoop();
+    };
+
+    // Word boundary events — fire at each word during speech
+    utterance.onboundary = (event) => {
+      if (event.name === 'word') {
+        // Get the word being spoken
+        const word = text.substring(event.charIndex, event.charIndex + (event.charLength || 4));
+        // Estimate openness from word length — longer words = wider mouth
+        const openness = Math.min(1, 0.4 + word.length * 0.08);
+        mouthTargetRef.current = openness;
+
+        // Close mouth briefly after each word (natural pause between words)
+        if (wordTimerRef.current) clearTimeout(wordTimerRef.current);
+        wordTimerRef.current = setTimeout(() => {
+          mouthTargetRef.current = 0.05;
+        }, Math.max(80, word.length * 50));
+      }
+    };
+
+    utterance.onend = stopMouthAnim;
+    utterance.onerror = stopMouthAnim;
+    speechSynthesis.speak(utterance);
+  };
 
   const handleButtonClick = (e: React.MouseEvent, buttonName: string) => {
     e.stopPropagation(); // Prevent background click
@@ -97,6 +170,7 @@ export default function HomePage() {
       className="min-h-screen flex items-end justify-center pb-16 relative"
       style={{ background: '#FFF8F0' }}
       onClick={handleBackgroundClick}
+      onMouseMove={handleMouseMove}
     >
       {/* Logout Section - Top Right */}
       <div className="absolute top-6 right-6 flex items-center gap-4 z-50">
@@ -152,6 +226,13 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* Ditto Character - centered in viewport */}
+      <DittoCharacter
+        mousePos={mousePos}
+        isPopupOpen={selectedButton !== null}
+        audioLevel={audioLevel}
+      />
+
       {/* Backdrop blur when popup is open */}
       <div
         className="fixed inset-0 transition-all duration-300"
@@ -163,7 +244,7 @@ export default function HomePage() {
         }}
       />
 
-      {/* Three buttons at the bottom */}
+      {/* Buttons at the bottom */}
       <div className="flex gap-8 relative" style={{ zIndex: 45 }}>
         <button
           onClick={(e) => handleButtonClick(e, 'quiz')}
@@ -185,6 +266,12 @@ export default function HomePage() {
           style={getButtonStyle('voice')}
         >
           <span className="relative z-10">Voice Cloning</span>
+        </button>
+        <button
+          onClick={handleTestVoice}
+          className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
+        >
+          <span className="relative z-10">Test Voice</span>
         </button>
       </div>
 

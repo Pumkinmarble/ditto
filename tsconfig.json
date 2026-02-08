@@ -49,6 +49,7 @@
     "dist",
     ".next",
     "ui/experimentation",
+    "experiments",
     "voice_module",
     "auth_module"
   ]
