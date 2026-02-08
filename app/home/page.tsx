@@ -17,7 +17,6 @@ export default function HomePage() {
   const [selectedButton, setSelectedButton] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const mouthTargetRef = useRef(0);
@@ -29,6 +28,8 @@ export default function HomePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [questionText, setQuestionText] = useState('');
   const [questionSaving, setQuestionSaving] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [dittoName, setDittoName] = useState('Ditto');
 
   // Fetch user ID when user logs in
   useEffect(() => {
@@ -205,8 +206,8 @@ export default function HomePage() {
 
   return (
     <main
-      className="min-h-screen flex items-end justify-center pb-16 relative"
-      style={{ background: '#FFF8F0' }}
+      className={`min-h-screen flex items-end justify-center pb-16 relative transition-colors duration-500 ${darkMode ? 'dark' : ''}`}
+      style={{ background: darkMode ? '#1a1a1e' : '#FFF8F0' }}
       onClick={handleBackgroundClick}
       onMouseMove={handleMouseMove}
     >
@@ -222,34 +223,58 @@ export default function HomePage() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Toggle button area */}
-          <button
-            className="w-12 h-12 flex flex-col items-center justify-center relative z-10"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {/* Line 1 → top of X */}
-            <span
-              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
+          {/* Top row: toggle button + name input */}
+          <div className="flex items-center h-12">
+            <button
+              className="w-12 h-12 flex-shrink-0 flex flex-col items-center justify-center relative z-10"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {/* Line 1 → top of X */}
+              <span
+                className={`block w-5 h-[2px] rounded-full absolute transition-all duration-300 ${darkMode ? 'bg-gray-300' : 'bg-gray-700'}`}
+                style={{
+                  transform: menuOpen ? 'rotate(45deg)' : 'translateY(-6px)',
+                }}
+              />
+              {/* Line 2 → fades out */}
+              <span
+                className={`block w-5 h-[2px] rounded-full absolute transition-all duration-300 ${darkMode ? 'bg-gray-300' : 'bg-gray-700'}`}
+                style={{
+                  opacity: menuOpen ? 0 : 1,
+                  transform: menuOpen ? 'scaleX(0)' : 'scaleX(1)',
+                }}
+              />
+              {/* Line 3 → bottom of X */}
+              <span
+                className={`block w-5 h-[2px] rounded-full absolute transition-all duration-300 ${darkMode ? 'bg-gray-300' : 'bg-gray-700'}`}
+                style={{
+                  transform: menuOpen ? 'rotate(-45deg)' : 'translateY(6px)',
+                }}
+              />
+            </button>
+            {/* Editable name - visible when menu is open */}
+            <input
+              type="text"
+              value={dittoName}
+              onChange={(e) => setDittoName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+              className={`h-8 px-2 text-sm font-semibold rounded-lg border focus:outline-none transition relative z-10 ${
+                darkMode
+                  ? 'bg-white/10 border-gray-600 text-gray-200 focus:border-white placeholder-white'
+                  : 'bg-white/50 border-gray-300 text-gray-800 focus:border-purple-500 placeholder-black'
+              }`}
               style={{
-                transform: menuOpen ? 'rotate(45deg)' : 'translateY(-6px)',
+                opacity: menuOpen ? 1 : 0,
+                width: menuOpen ? 'calc(100% - 60px)' : '0',
+                padding: menuOpen ? undefined : '0',
+                border: menuOpen ? undefined : 'none',
+                transition: 'opacity 0.2s ease, width 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDelay: menuOpen ? '0.15s' : '0s',
+                marginRight: menuOpen ? '12px' : '0',
               }}
+              placeholder="Enter a name..."
             />
-            {/* Line 2 → fades out */}
-            <span
-              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
-              style={{
-                opacity: menuOpen ? 0 : 1,
-                transform: menuOpen ? 'scaleX(0)' : 'scaleX(1)',
-              }}
-            />
-            {/* Line 3 → bottom of X */}
-            <span
-              className="block w-5 h-[2px] bg-gray-700 rounded-full absolute transition-all duration-300"
-              style={{
-                transform: menuOpen ? 'rotate(-45deg)' : 'translateY(6px)',
-              }}
-            />
-          </button>
+          </div>
 
           {/* Menu content */}
           <div
@@ -263,9 +288,26 @@ export default function HomePage() {
             }}
           >
             <div className="flex-1" />
-            <div style={{ borderTop: '1px solid rgba(168, 85, 247, 0.1)' }} />
+            {/* Dark/Light mode toggle */}
             <button
-              className="block w-full px-3 py-2 text-sm font-semibold text-gray-800 text-left transition-colors relative z-10 rounded-b-lg"
+              className={`flex items-center justify-between w-full px-3 py-2 text-sm font-semibold text-left transition-colors relative z-10 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = darkMode
+                  ? 'rgba(192, 192, 192, 0.1)'
+                  : 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+              onClick={() => setDarkMode(!darkMode)}
+            >
+              <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              <span className="text-base">{darkMode ? '\u2600' : '\u263E'}</span>
+            </button>
+            <div style={{ borderTop: `1px solid ${darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)'}` }} />
+            <button
+              className={`block w-full px-3 py-2 text-sm font-semibold text-left transition-colors relative z-10 rounded-b-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
               style={{ background: 'transparent' }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
@@ -293,7 +335,7 @@ export default function HomePage() {
                 e.stopPropagation();
                 setShowProfileMenu(!showProfileMenu);
               }}
-              className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-lg hover:shadow-xl transition-shadow duration-200 focus:outline-none focus:ring-2 focus:ring-orange-300 relative z-10"
+              className={`w-12 h-12 rounded-full overflow-hidden border-2 shadow-lg hover:shadow-xl transition-shadow duration-200 focus:outline-none focus:ring-2 relative z-10 ${darkMode ? 'border-gray-600 focus:ring-white' : 'border-white focus:ring-purple-500'}`}
             >
               {user.picture ? (
                 <img
@@ -323,37 +365,26 @@ export default function HomePage() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Triangle tip pointing up toward bottom-left of profile pic */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: 'calc(100% - 24px)',
-                  width: 0,
-                  height: 0,
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderBottom: '8px solid rgba(255,255,255,0.85)',
-                }}
-              />
               <div
                 className="w-52 rounded-lg rounded-tr-none acrylic-button"
                 style={{ padding: 0, transform: 'none' }}
               >
-                <div className="px-3 py-2" style={{ borderBottom: '1px solid rgba(168, 85, 247, 0.1)' }}>
-                  <p className="text-sm font-semibold text-gray-800 truncate">
+                <div className="px-3 py-2" style={{ borderBottom: `1px solid ${darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)'}` }}>
+                  <p className={`text-sm font-semibold truncate ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                     {user.name || 'User'}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className={`text-xs truncate ${darkMode ? 'text-gray-300' : 'text-gray-500'}`}>
                     {user.email}
                   </p>
                 </div>
                 <a
                   href="/api/auth/logout"
-                  className="block px-3 py-2 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-b-lg"
+                  className={`block px-3 py-2 text-sm font-semibold transition-colors relative z-10 rounded-b-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}
                   style={{ background: 'transparent' }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+                    e.currentTarget.style.background = darkMode
+                      ? 'rgba(192, 192, 192, 0.1)'
+                      : 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = 'transparent';
@@ -479,13 +510,13 @@ export default function HomePage() {
             type="text"
             value={questionText}
             onChange={(e) => setQuestionText(e.target.value)}
-            placeholder="Ask Ditto a question..."
-            className="rounded-lg px-4 py-3 text-sm text-gray-800 outline-none w-80 bg-white/60 backdrop-blur-md border border-gray-200 shadow-md"
+            placeholder={`Ask ${dittoName || 'Ditto'} a question...`}
+            className={`rounded-lg px-4 py-3 text-sm outline-none w-80 backdrop-blur-md border shadow-md ${darkMode ? 'bg-white/10 border-gray-600 text-gray-200 placeholder-gray-400' : 'bg-white/60 border-gray-200 text-gray-800'}`}
           />
           <button
             type="submit"
             disabled={questionSaving || !questionText.trim()}
-            className="acrylic-button rounded-lg px-4 py-3 font-semibold text-gray-800 text-sm relative z-10 disabled:opacity-40"
+            className={`acrylic-button rounded-lg px-4 py-3 font-semibold text-sm relative z-10 disabled:opacity-40 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
             style={{ transform: 'none' }}
           >
             {questionSaving ? '...' : 'Send'}
@@ -508,28 +539,28 @@ export default function HomePage() {
       <div className="flex gap-8 relative" style={{ zIndex: 45 }}>
         <button
           onClick={(e) => handleButtonClick(e, 'quiz')}
-          className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
+          className={`acrylic-button px-8 py-4 rounded-lg font-semibold relative z-0 transition-all duration-700 ease-in-out ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
           style={getButtonStyle('quiz')}
         >
           <span className="relative z-10">Personality Quiz</span>
         </button>
         <button
           onClick={(e) => handleButtonClick(e, 'diary')}
-          className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
+          className={`acrylic-button px-8 py-4 rounded-lg font-semibold relative z-0 transition-all duration-700 ease-in-out ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
           style={getButtonStyle('diary')}
         >
           <span className="relative z-10">Diary</span>
         </button>
         <button
           onClick={(e) => handleButtonClick(e, 'voice')}
-          className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
+          className={`acrylic-button px-8 py-4 rounded-lg font-semibold relative z-0 transition-all duration-700 ease-in-out ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
           style={getButtonStyle('voice')}
         >
           <span className="relative z-10">Voice Cloning</span>
         </button>
         <button
           onClick={handleTestVoice}
-          className="acrylic-button px-8 py-4 rounded-lg font-semibold text-gray-800 relative z-0 transition-all duration-700 ease-in-out"
+          className={`acrylic-button px-8 py-4 rounded-lg font-semibold relative z-0 transition-all duration-700 ease-in-out ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
         >
           <span className="relative z-10">Test Voice</span>
         </button>
@@ -543,12 +574,8 @@ export default function HomePage() {
             setShowPopup(false);
             setTimeout(() => setSelectedButton(null), 400);
           }}
-          mousePos={mousePos}
-          isHovering={isHovering}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
           userId={userId}
+          darkMode={darkMode}
         />
       )}
 
@@ -560,12 +587,8 @@ export default function HomePage() {
             setShowPopup(false);
             setTimeout(() => setSelectedButton(null), 400);
           }}
-          mousePos={mousePos}
-          isHovering={isHovering}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
           userId={userId}
+          darkMode={darkMode}
         />
       )}
 
@@ -577,12 +600,8 @@ export default function HomePage() {
             setShowPopup(false);
             setTimeout(() => setSelectedButton(null), 400);
           }}
-          mousePos={mousePos}
-          isHovering={isHovering}
-          onMouseMove={handleMouseMove}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
           userId={userId}
+          darkMode={darkMode}
         />
       )}
       {/* Clear Data Confirmation Modal */}
@@ -605,22 +624,24 @@ export default function HomePage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="px-6 py-5 text-center">
-              <p className="text-base font-semibold text-black">
+              <p className={`text-base font-semibold ${darkMode ? 'text-white' : 'text-black'}`}>
                 Clear all data?
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className={`text-sm mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 This deletes all data inputted for this instance. This action cannot be undone.
               </p>
             </div>
             <div
               className="flex"
-              style={{ borderTop: '1px solid rgba(168, 85, 247, 0.1)' }}
+              style={{ borderTop: `1px solid ${darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)'}` }}
             >
               <button
-                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-bl-lg"
+                className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors relative z-10 rounded-bl-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
                 style={{ background: 'transparent' }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
+                  e.currentTarget.style.background = darkMode
+                    ? 'rgba(192, 192, 192, 0.1)'
+                    : 'linear-gradient(90deg, rgba(255,123,107,0.12) 0%, rgba(168,85,247,0.12) 100%)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'transparent';
@@ -629,9 +650,9 @@ export default function HomePage() {
               >
                 Cancel
               </button>
-              <div style={{ width: '1px', background: 'rgba(168, 85, 247, 0.1)' }} />
+              <div style={{ width: '1px', background: darkMode ? 'rgba(192,192,192,0.1)' : 'rgba(168, 85, 247, 0.1)' }} />
               <button
-                className="flex-1 px-4 py-3 text-sm font-semibold text-gray-800 transition-colors relative z-10 rounded-br-lg"
+                className={`flex-1 px-4 py-3 text-sm font-semibold transition-colors relative z-10 rounded-br-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
                 style={{ background: 'transparent' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';

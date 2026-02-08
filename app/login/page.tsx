@@ -45,7 +45,7 @@ export default function LoginPage() {
           </h1>
 
           <p className="text-center text-gray-600 mb-8">
-            Create your AI digital twin that lives forever
+            Create your AI digital twin that lives forever!
           </p>
 
           {/* Auth0 Login Button */}
@@ -87,7 +87,7 @@ export default function LoginPage() {
             onClick={() => router.push('/home')}
             className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition border border-gray-300"
           >
-            🚀 Skip Login (Dev Mode)
+            Skip Login (Dev Mode)
           </button>
 
           {/* Info Text */}

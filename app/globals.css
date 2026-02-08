@@ -105,6 +105,66 @@ body {
     inset 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
+/* Dark mode acrylic buttons — silver gradient */
+.dark .acrylic-button {
+  background:
+    linear-gradient(90deg,
+      rgba(192, 192, 192, 0.06) 0%,
+      rgba(160, 170, 180, 0.06) 50%,
+      rgba(140, 150, 165, 0.06) 100%
+    ),
+    linear-gradient(145deg, #2a2a2e, #1e1e22);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 1px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.08),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark .acrylic-button::before {
+  background: linear-gradient(90deg, #a0a0a0 0%, #c0c0c0 50%, #8a8a8a 100%);
+}
+
+.dark .acrylic-button::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.dark .acrylic-button:hover {
+  background:
+    linear-gradient(90deg,
+      rgba(192, 192, 192, 0.15) 0%,
+      rgba(160, 170, 180, 0.15) 50%,
+      rgba(140, 150, 165, 0.15) 100%
+    ),
+    linear-gradient(145deg, #333338, #28282c);
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.5),
+    0 5px 15px rgba(0, 0, 0, 0.35),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark .acrylic-button:hover::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.dark .acrylic-button:active {
+  box-shadow:
+    0 5px 15px rgba(0, 0, 0, 0.4),
+    0 2px 5px rgba(0, 0, 0, 0.3),
+    inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
 /* Diary editor text styling */
 [contenteditable] {
   color: #000000 !important;
@@ -112,6 +172,14 @@ body {
 
 [contenteditable] * {
   color: #000000 !important;
+}
+
+.dark [contenteditable] {
+  color: #E5E7EB !important;
+}
+
+.dark [contenteditable] * {
+  color: #E5E7EB !important;
 }
 
 @layer utilities {

@@ -6,23 +6,15 @@ import Toast from './Toast';
 interface VoiceClonePopupProps {
   isOpen: boolean;
   onClose: () => void;
-  mousePos: { x: number; y: number };
-  isHovering: boolean;
-  onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
   userId: string | null;
+  darkMode: boolean;
 }
 
 export default function VoiceClonePopup({
   isOpen,
   onClose,
-  mousePos,
-  isHovering,
-  onMouseMove,
-  onMouseEnter,
-  onMouseLeave,
   userId,
+  darkMode,
 }: VoiceClonePopupProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -35,17 +27,20 @@ export default function VoiceClonePopup({
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
   const [showToast, setShowToast] = useState(false);
+  const [localMousePos, setLocalMousePos] = useState({ x: 0, y: 0 });
+  const [localHovering, setLocalHovering] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const allChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const playbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup function to stop microphone
   const stopMicrophone = () => {
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => {
@@ -55,17 +50,16 @@ export default function VoiceClonePopup({
     }
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (audioContextRef.current) audioContextRef.current.close();
-      stopMicrophone(); // Stop microphone on unmount
+      stopMicrophone();
     };
   }, []);
 
-  // Stop microphone when popup closes while recording
   useEffect(() => {
     if (!isOpen && isRecording) {
       if (mediaRecorderRef.current) {
@@ -79,44 +73,49 @@ export default function VoiceClonePopup({
     }
   }, [isOpen, isRecording]);
 
-  const startRecording = async () => {
+  const initRecorder = async (isResume: boolean) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream; // Store stream for cleanup
-
-      // Setup audio context for volume visualization
+      mediaStreamRef.current = stream;
       audioContextRef.current = new AudioContext();
       analyserRef.current = audioContextRef.current.createAnalyser();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       source.connect(analyserRef.current);
       analyserRef.current.fftSize = 256;
-      analyserRef.current.smoothingTimeConstant = 0.3; // More responsive (default is 0.8)
+      analyserRef.current.smoothingTimeConstant = 0.3;
 
-      // Setup media recorder
       mediaRecorderRef.current = new MediaRecorder(stream);
       audioChunksRef.current = [];
+
+      if (!isResume) {
+        allChunksRef.current = [];
+      }
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        setAudioBlob(audioBlob);
-        setAudioUrl(URL.createObjectURL(audioBlob));
-        stopMicrophone(); // Stop microphone when recording stops
+        allChunksRef.current = [...allChunksRef.current, ...audioChunksRef.current];
+        const combinedBlob = new Blob(allChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(combinedBlob);
+        setAudioUrl(URL.createObjectURL(combinedBlob));
+        stopMicrophone();
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      setRecordingTime(0);
+      setAudioBlob(null);
+      setAudioUrl(null);
 
-      // Start timer
+      if (!isResume) {
+        setRecordingTime(0);
+      }
+
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
 
-      // Start volume visualization
       visualizeVolume();
     } catch (error) {
       console.error('Failed to start recording:', error);
@@ -125,6 +124,9 @@ export default function VoiceClonePopup({
       setShowToast(true);
     }
   };
+
+  const startRecording = () => initRecorder(false);
+  const resumeRecording = () => initRecorder(true);
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
@@ -138,21 +140,15 @@ export default function VoiceClonePopup({
 
   const visualizeVolume = () => {
     if (!analyserRef.current) return;
-
     const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-
     const updateVolume = () => {
       if (!analyserRef.current) return;
-
       analyserRef.current.getByteFrequencyData(dataArray);
       const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-      // Much higher sensitivity - divide by smaller number and add multiplier
       const normalizedVolume = (average / 40) * 1.5;
       setVolume(Math.min(normalizedVolume, 1));
-
       animationRef.current = requestAnimationFrame(updateVolume);
     };
-
     updateVolume();
   };
 
@@ -160,6 +156,12 @@ export default function VoiceClonePopup({
     if (audioUrl && audioPlayerRef.current) {
       audioPlayerRef.current.play();
       setIsPlaying(true);
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
+      playbackTimerRef.current = setInterval(() => {
+        if (audioPlayerRef.current) {
+          setPlaybackTime(Math.floor(audioPlayerRef.current.currentTime));
+        }
+      }, 100);
     }
   };
 
@@ -167,6 +169,7 @@ export default function VoiceClonePopup({
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       setIsPlaying(false);
+      if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
     }
   };
 
@@ -177,21 +180,18 @@ export default function VoiceClonePopup({
       setShowToast(true);
       return;
     }
-
     if (recordingTime < 60) {
       setToastMessage('Please record at least 60 seconds of audio!');
       setToastType('error');
       setShowToast(true);
       return;
     }
-
     if (!userId) {
       setToastMessage('Please log in to save your voice!');
       setToastType('error');
       setShowToast(true);
       return;
     }
-
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, `${userId}.webm`);
@@ -203,18 +203,12 @@ export default function VoiceClonePopup({
         method: 'POST',
         body: formData,
       });
-
       const data = await response.json();
-
       if (data.success) {
         setToastMessage('Voice cloned and transcribed successfully!');
         setToastType('success');
         setShowToast(true);
-
-        // Reset after successful upload
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        setTimeout(() => { onClose(); }, 2000);
       } else {
         throw new Error(data.error || 'Failed to save recording');
       }
@@ -232,34 +226,37 @@ export default function VoiceClonePopup({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Theme-dependent styles
+  const popupBg = darkMode
+    ? `linear-gradient(90deg, rgba(192,192,192,0.06) 0%, rgba(160,170,180,0.06) 50%, rgba(140,150,165,0.06) 100%), linear-gradient(145deg, #2a2a2e, #1e1e22)`
+    : `linear-gradient(90deg, rgba(255,123,107,0.03) 0%, rgba(168,85,247,0.03) 50%, rgba(59,130,246,0.03) 100%), linear-gradient(145deg, #FFFFFF, #FFF5E8)`;
+
+  const popupShadow = darkMode
+    ? `0 10px 30px rgba(0,0,0,0.4), 0 1px 8px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.3)`
+    : `0 10px 30px rgba(0,0,0,0.12), 0 1px 8px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,1), inset 0 -2px 4px rgba(0,0,0,0.08)`;
+
+  const glowGradient = darkMode
+    ? `radial-gradient(circle 30px at ${localMousePos.x}px ${localMousePos.y}px, rgba(192,192,192,0.3), rgba(160,170,180,0.2) 40%, rgba(140,150,165,0.1) 70%, transparent 100%)`
+    : `radial-gradient(circle 30px at ${localMousePos.x}px ${localMousePos.y}px, rgba(255,123,107,0.4), rgba(168,85,247,0.3) 40%, rgba(59,130,246,0.2) 70%, transparent 100%)`;
+
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      onMouseMove={onMouseMove}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseMove={(e) => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        setLocalMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      }}
+      onMouseEnter={() => setLocalHovering(true)}
+      onMouseLeave={() => setLocalHovering(false)}
       className="fixed transition-all duration-300 ease-in-out rounded-2xl shadow-2xl p-8"
       style={{
-        background: `
-          linear-gradient(90deg,
-            rgba(255, 123, 107, 0.03) 0%,
-            rgba(168, 85, 247, 0.03) 50%,
-            rgba(59, 130, 246, 0.03) 100%
-          ),
-          linear-gradient(145deg, #FFFFFF, #FFF5E8)
-        `,
-        boxShadow: `
-          0 10px 30px rgba(0, 0, 0, 0.12),
-          0 1px 8px rgba(0, 0, 0, 0.08),
-          inset 0 2px 4px rgba(255, 255, 255, 1),
-          inset 0 -2px 4px rgba(0, 0, 0, 0.08)
-        `,
+        background: popupBg,
+        boxShadow: popupShadow,
         width: '800px',
         height: '600px',
         left: '50%',
-        transform: isOpen
-          ? 'translate(-50%, -50%)'
-          : 'translate(-50%, 50vh)',
+        transform: isOpen ? 'translate(-50%, -50%)' : 'translate(-50%, 50vh)',
         top: isOpen ? '45%' : '100%',
         opacity: isOpen ? 1 : 0,
         pointerEvents: isOpen ? 'auto' : 'none',
@@ -271,17 +268,10 @@ export default function VoiceClonePopup({
       <div
         style={{
           position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
+          top: 0, left: 0, right: 0, bottom: 0,
           pointerEvents: 'none',
-          background: `radial-gradient(circle 30px at ${mousePos.x}px ${mousePos.y}px,
-            rgba(255, 123, 107, 0.4),
-            rgba(168, 85, 247, 0.3) 40%,
-            rgba(59, 130, 246, 0.2) 70%,
-            transparent 100%)`,
-          opacity: isOpen && isHovering ? 1 : 0,
+          background: glowGradient,
+          opacity: isOpen && localHovering ? 1 : 0,
           transition: 'opacity 0.3s ease',
           borderRadius: '1rem',
         }}
@@ -291,8 +281,8 @@ export default function VoiceClonePopup({
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Voice Cloning</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Voice Cloning</h2>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             Speak about yourself for at least 60 seconds!
           </p>
         </div>
@@ -301,22 +291,22 @@ export default function VoiceClonePopup({
         <div className="text-center mb-4">
           <div className="mb-1">
             {isPlaying ? (
-              <span className="text-5xl font-bold text-gray-800 tabular-nums">
+              <span className={`text-5xl font-bold tabular-nums ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                 {formatTime(playbackTime)} / {formatTime(recordingTime)}
               </span>
             ) : (
-              <span className="text-5xl font-bold text-gray-800 tabular-nums">{formatTime(recordingTime)}</span>
+              <span className={`text-5xl font-bold tabular-nums ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{formatTime(recordingTime)}</span>
             )}
           </div>
           {isRecording && (
-            <p className="text-xs text-gray-400 mb-2">Recording in progress...</p>
+            <p className={`text-xs mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Recording in progress...</p>
           )}
           {isPlaying && (
-            <p className="text-xs text-gray-400 mb-2">Playing back...</p>
+            <p className={`text-xs mb-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Playing back...</p>
           )}
           {!isPlaying && !isRecording && (
             <p className="text-sm font-semibold" style={{ color: recordingTime < 60 ? '#EF4444' : '#22C55E' }}>
-              {recordingTime < 60 ? `Need ${60 - recordingTime}s more to submit` : '✓ Ready to submit!'}
+              {recordingTime < 60 ? `Need ${60 - recordingTime}s more to submit` : '\u2713 Ready to submit!'}
             </p>
           )}
         </div>
@@ -327,7 +317,11 @@ export default function VoiceClonePopup({
             {Array.from({ length: 40 }).map((_, i) => (
               <div
                 key={i}
-                className="w-2 bg-gradient-to-t from-purple-600 to-blue-400 rounded-full transition-all duration-100"
+                className={`w-2 rounded-full transition-all duration-100 ${
+                  darkMode
+                    ? 'bg-gradient-to-t from-gray-400 to-gray-300'
+                    : 'bg-gradient-to-t from-purple-600 to-blue-400'
+                }`}
                 style={{
                   height: isRecording
                     ? `${Math.max(10, (volume * 100 * (0.5 + Math.random() * 0.5)))}%`
@@ -344,8 +338,8 @@ export default function VoiceClonePopup({
           {!isRecording && !audioBlob && (
             <button
               onClick={startRecording}
-              className="px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 text-white"
-              style={{ backgroundColor: '#4C1D95' }}
+              className={`px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 ${darkMode ? 'text-gray-800' : 'text-white'}`}
+              style={{ backgroundColor: darkMode ? '#FFFFFF' : '#4C1D95' }}
             >
               Start Recording
             </button>
@@ -364,19 +358,30 @@ export default function VoiceClonePopup({
             <>
               <button
                 onClick={isPlaying ? pauseRecording : playRecording}
-                className="px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 text-white"
-                style={{ backgroundColor: '#4C1D95' }}
+                className={`px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 ${darkMode ? 'text-gray-800' : 'text-white'}`}
+                style={{ backgroundColor: darkMode ? '#FFFFFF' : '#4C1D95' }}
               >
                 {isPlaying ? 'Pause' : 'Play Recording'}
               </button>
               <button
+                onClick={resumeRecording}
+                className={`px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 border-2 ${
+                  darkMode ? 'text-gray-200 border-gray-600' : 'text-gray-800 border-gray-300'
+                }`}
+              >
+                Resume Recording
+              </button>
+              <button
                 onClick={() => {
+                  allChunksRef.current = [];
                   setAudioBlob(null);
                   setAudioUrl(null);
                   setRecordingTime(0);
                   setPlaybackTime(0);
                 }}
-                className="px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 text-gray-800 border-2 border-gray-300"
+                className={`px-8 py-3 rounded-lg font-semibold transition hover:opacity-90 border-2 ${
+                  darkMode ? 'text-gray-200 border-gray-600' : 'text-gray-800 border-gray-300'
+                }`}
               >
                 Re-record
               </button>
@@ -389,13 +394,10 @@ export default function VoiceClonePopup({
           <audio
             ref={audioPlayerRef}
             src={audioUrl}
-            onTimeUpdate={(e) => {
-              const audio = e.currentTarget;
-              setPlaybackTime(Math.floor(audio.currentTime));
-            }}
             onEnded={() => {
               setIsPlaying(false);
               setPlaybackTime(0);
+              if (playbackTimerRef.current) clearInterval(playbackTimerRef.current);
             }}
             style={{ display: 'none' }}
           />
@@ -405,32 +407,16 @@ export default function VoiceClonePopup({
         <div className="flex gap-3 mt-auto">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-75 text-gray-800"
-            style={{
-              background: `
-                linear-gradient(90deg,
-                  rgba(255, 123, 107, 0.03) 0%,
-                  rgba(168, 85, 247, 0.03) 50%,
-                  rgba(59, 130, 246, 0.03) 100%
-                ),
-                linear-gradient(145deg, #FFFFFF, #FFF5E8)
-              `,
-              boxShadow: `
-                0 10px 30px rgba(0, 0, 0, 0.12),
-                0 1px 8px rgba(0, 0, 0, 0.08),
-                inset 0 2px 4px rgba(255, 255, 255, 1),
-                inset 0 -2px 4px rgba(0, 0, 0, 0.08)
-              `
-            }}
+            className={`flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-75 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}
+            style={{ background: popupBg, boxShadow: popupShadow }}
           >
             Close
           </button>
-
           <button
             onClick={handleSubmit}
             disabled={!audioBlob}
-            className="flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: '#4C1D95' }}
+            className={`flex-1 px-6 py-2.5 rounded-lg font-semibold transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed ${darkMode ? 'text-gray-800' : 'text-white'}`}
+            style={{ backgroundColor: darkMode ? '#FFFFFF' : '#4C1D95' }}
           >
             Submit
           </button>

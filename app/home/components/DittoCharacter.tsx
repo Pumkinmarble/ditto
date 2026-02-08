@@ -28,7 +28,7 @@ function DittoMouth({ audioLevel = 0 }: { audioLevel: number }) {
   });
 
   return (
-    <mesh ref={meshRef} position={[0, -0.2, 1.28]} renderOrder={1}>
+    <mesh ref={meshRef} position={[0, -0.25, 1.28]} renderOrder={1}>
       <circleGeometry args={[0.18, 32]} />
       <meshStandardMaterial color="#2D1B4E" depthTest={false} side={THREE.DoubleSide} />
     </mesh>
@@ -51,7 +51,7 @@ function DittoBlob({ mousePos, isPopupOpen, audioLevel = 0 }: DittoCharacterProp
     const proximity = Math.max(0, 1 - dist);
 
     // Animate distortion: base 0.2 + up to 0.25 extra when cursor is near
-    const targetDistort = isPopupOpen ? 0.15 : 0.2 + proximity * 0.25;
+    const targetDistort = isPopupOpen ? 0.05 : 0.08 + proximity * 0.1;
     materialRef.current.distort = THREE.MathUtils.lerp(
       materialRef.current.distort,
       targetDistort,
@@ -80,12 +80,12 @@ function DittoBlob({ mousePos, isPopupOpen, audioLevel = 0 }: DittoCharacterProp
     <group ref={groupRef}>
       {/* Main blob body */}
       <mesh>
-        <sphereGeometry args={[1.2, 64, 64]} />
+        <sphereGeometry args={[1.45, 64, 64]} />
         <MeshDistortMaterial
           ref={materialRef}
           color="#C8A2F8"
-          speed={2.5}
-          distort={0.2}
+          speed={1.2}
+          distort={0.08}
           radius={1}
           roughness={0.2}
           metalness={0.1}
@@ -95,24 +95,24 @@ function DittoBlob({ mousePos, isPopupOpen, audioLevel = 0 }: DittoCharacterProp
       </mesh>
 
       {/* Face group - rendered on top of blob */}
-      {/* Left eye */}
-      <mesh position={[-0.35, 0.25, 1.25]} renderOrder={1}>
+      {/* Left eye (dark) */}
+      <mesh position={[-0.35, 0.15, 1.25]} renderOrder={1}>
         <sphereGeometry args={[0.15, 32, 32]} />
         <meshStandardMaterial color="#2D1B4E" depthTest={false} />
       </mesh>
-      {/* Left eye highlight */}
-      <mesh position={[-0.30, 0.32, 1.38]} renderOrder={2}>
+      {/* Left highlight (white) */}
+      <mesh position={[-0.30, 0.20, 1.38]} renderOrder={2}>
         <sphereGeometry args={[0.055, 16, 16]} />
         <meshBasicMaterial color="white" depthTest={false} />
       </mesh>
 
-      {/* Right eye */}
-      <mesh position={[0.35, 0.25, 1.25]} renderOrder={1}>
+      {/* Right eye (dark) */}
+      <mesh position={[0.35, 0.15, 1.25]} renderOrder={1}>
         <sphereGeometry args={[0.15, 32, 32]} />
         <meshStandardMaterial color="#2D1B4E" depthTest={false} />
       </mesh>
-      {/* Right eye highlight */}
-      <mesh position={[0.40, 0.32, 1.38]} renderOrder={2}>
+      {/* Right highlight (white) */}
+      <mesh position={[0.40, 0.20, 1.38]} renderOrder={2}>
         <sphereGeometry args={[0.055, 16, 16]} />
         <meshBasicMaterial color="white" depthTest={false} />
       </mesh>
@@ -130,7 +130,7 @@ export default function DittoCharacter({ mousePos, isPopupOpen, audioLevel }: Di
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: `translate(-50%, -60%) scale(${isPopupOpen ? 0.8 : 1})`,
+        transform: `translate(-50%, -70%) scale(${isPopupOpen ? 0.8 : 1})`,
         width: '500px',
         height: '500px',
         zIndex: 30,
