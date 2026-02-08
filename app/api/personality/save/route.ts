@@ -5,42 +5,61 @@ export async function POST(request: Request) {
   try {
     const { personalityType, dimensions, description, sessionId } = await request.json();
 
-    // For now, create/use a demo user (later we'll integrate Auth0)
-    const demoEmail = `demo-${sessionId}@echo.ai`;
-    const demoAuth0Id = `demo_${sessionId}`;
-
-    // Check if user exists
-    let { data: existingUser, error: fetchError } = await supabaseAdmin
-      .from('users')
-      .select('*')
-      .eq('auth0_id', demoAuth0Id)
-      .single();
-
     let userId: string;
 
-    if (fetchError && fetchError.code === 'PGRST116') {
-      // User doesn't exist, create one
-      const { data: newUser, error: insertError } = await supabaseAdmin
+    // Check if sessionId is a valid UUID (Auth0 user ID from logged-in user)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId);
+
+    if (isUUID) {
+      // This is an Auth0 user ID, use it directly
+      userId = sessionId;
+
+      // Verify the user exists
+      const { data: user, error: fetchError } = await supabaseAdmin
         .from('users')
-        .insert([
-          {
-            auth0_id: demoAuth0Id,
-            email: demoEmail,
-            name: 'Demo User',
-          },
-        ])
-        .select()
+        .select('id')
+        .eq('id', userId)
         .single();
 
-      if (insertError) {
-        throw insertError;
+      if (fetchError || !user) {
+        throw new Error('User not found');
       }
-
-      userId = newUser.id;
-    } else if (fetchError) {
-      throw fetchError;
     } else {
-      userId = existingUser.id;
+      // This is a demo sessionId, create/use a demo user
+      const demoEmail = `demo-${sessionId}@echo.ai`;
+      const demoAuth0Id = `demo_${sessionId}`;
+
+      // Check if demo user exists
+      let { data: existingUser, error: fetchError } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('auth0_id', demoAuth0Id)
+        .single();
+
+      if (fetchError && fetchError.code === 'PGRST116') {
+        // User doesn't exist, create one
+        const { data: newUser, error: insertError } = await supabaseAdmin
+          .from('users')
+          .insert([
+            {
+              auth0_id: demoAuth0Id,
+              email: demoEmail,
+              name: 'Demo User',
+            },
+          ])
+          .select()
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        userId = newUser.id;
+      } else if (fetchError) {
+        throw fetchError;
+      } else {
+        userId = existingUser.id;
+      }
     }
 
     // Update user with personality data

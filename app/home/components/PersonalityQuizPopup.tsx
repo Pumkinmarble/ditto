@@ -12,6 +12,7 @@ interface PersonalityQuizPopupProps {
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  userId: string | null;
 }
 
 export default function PersonalityQuizPopup({
@@ -22,6 +23,7 @@ export default function PersonalityQuizPopup({
   onMouseMove,
   onMouseEnter,
   onMouseLeave,
+  userId,
 }: PersonalityQuizPopupProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Response[]>([]);
@@ -90,7 +92,7 @@ export default function PersonalityQuizPopup({
           questionNum,
           questionText,
           answer,
-          sessionId,
+          sessionId: userId || sessionId, // Use userId if logged in, otherwise sessionId
         }),
       });
     } catch (error) {
@@ -137,7 +139,7 @@ export default function PersonalityQuizPopup({
           personalityType: type,
           description,
           dimensions,
-          sessionId,
+          sessionId: userId || sessionId, // Use userId if logged in, otherwise sessionId
         }),
       });
 

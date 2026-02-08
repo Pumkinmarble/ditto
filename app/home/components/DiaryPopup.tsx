@@ -12,6 +12,7 @@ interface DiaryPopupProps {
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  userId: string | null;
 }
 
 export default function DiaryPopup({
@@ -22,6 +23,7 @@ export default function DiaryPopup({
   onMouseMove,
   onMouseEnter,
   onMouseLeave,
+  userId,
 }: DiaryPopupProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const [currentFont, setCurrentFont] = useState('Arial');
@@ -81,7 +83,7 @@ export default function DiaryPopup({
         },
         body: JSON.stringify({
           content,
-          sessionId,
+          sessionId: userId || sessionId, // Use userId if logged in, otherwise sessionId
         }),
       });
       setToastMessage('Diary entry saved successfully!');

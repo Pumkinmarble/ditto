@@ -35,12 +35,14 @@ export interface User {
   email: string;
   name: string | null;
   picture: string | null;
-  backboard_assistant_id: string | null;
+  assistant_id: string | null;
+  thread_id: string | null;
+  voice_id: string | null;
+  voice_name: string | null;
   personality_completed: boolean;
   personality_type?: string | null;
   personality_data?: any | null;
   diary_entry_count: number;
-  elevenlabs_voice_id: string | null;
   voice_sample_uploaded: boolean;
   wallet_address: string | null;
   solana_tx_hash: string | null;

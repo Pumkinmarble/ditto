@@ -26,6 +26,25 @@ export default function HomePage() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch user ID when user logs in
+  useEffect(() => {
+    if (user) {
+      fetch('/api/user/current')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setUserId(data.id);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch user ID:', err);
+        });
+    } else {
+      setUserId(null);
+    }
+  }, [user]);
 
   // Handle Escape key to close popup
   useEffect(() => {
@@ -430,6 +449,7 @@ export default function HomePage() {
           onMouseMove={handleMouseMove}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
+          userId={userId}
         />
       )}
 
@@ -446,6 +466,7 @@ export default function HomePage() {
           onMouseMove={handleMouseMove}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
+          userId={userId}
         />
       )}
 
@@ -462,6 +483,7 @@ export default function HomePage() {
           onMouseMove={handleMouseMove}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
+          userId={userId}
         />
       )}
       {/* Clear Data Confirmation Modal */}

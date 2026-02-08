@@ -33,10 +33,14 @@ export interface User {
   email: string;
   name?: string;
   picture?: string;
-  backboard_assistant_id?: string;
+  assistant_id?: string;  // Backboard.io assistant ID (RAG isolation)
+  thread_id?: string;     // Backboard.io thread ID (RAG isolation)
+  voice_id?: string;      // ElevenLabs cloned voice ID
+  voice_name?: string;    // Name of the cloned voice
   personality_completed?: boolean;
+  personality_type?: string;
+  personality_data?: any;
   diary_entry_count?: number;
-  elevenlabs_voice_id?: string;
   voice_sample_uploaded?: boolean;
   wallet_address?: string;
   solana_tx_hash?: string;
@@ -145,26 +149,36 @@ export async function getOrCreateUser(auth0User: {
 }
 
 /**
- * Update Backboard assistant ID
+ * Update Backboard assistant and thread IDs
  */
 export async function updateBackboardAssistant(
   auth0Id: string,
-  assistantId: string
+  assistantId: string,
+  threadId?: string
 ): Promise<void> {
-  await updateUser(auth0Id, { backboard_assistant_id: assistantId });
+  const updates: Partial<User> = { assistant_id: assistantId };
+  if (threadId) {
+    updates.thread_id = threadId;
+  }
+  await updateUser(auth0Id, updates);
 }
 
 /**
- * Update ElevenLabs voice ID
+ * Update ElevenLabs voice ID and name
  */
 export async function updateVoiceId(
   auth0Id: string,
-  voiceId: string
+  voiceId: string,
+  voiceName?: string
 ): Promise<void> {
-  await updateUser(auth0Id, {
-    elevenlabs_voice_id: voiceId,
+  const updates: Partial<User> = {
+    voice_id: voiceId,
     voice_sample_uploaded: true,
-  });
+  };
+  if (voiceName) {
+    updates.voice_name = voiceName;
+  }
+  await updateUser(auth0Id, updates);
 }
 
 /**

@@ -11,6 +11,7 @@ interface VoiceClonePopupProps {
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
+  userId: string | null;
 }
 
 export default function VoiceClonePopup({
@@ -21,6 +22,7 @@ export default function VoiceClonePopup({
   onMouseMove,
   onMouseEnter,
   onMouseLeave,
+  userId,
 }: VoiceClonePopupProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -183,22 +185,38 @@ export default function VoiceClonePopup({
       return;
     }
 
+    if (!userId) {
+      setToastMessage('Please log in to save your voice!');
+      setToastType('error');
+      setShowToast(true);
+      return;
+    }
+
     try {
       const formData = new FormData();
-      formData.append('audio', audioBlob, 'voice-recording.webm');
-      formData.append('timestamp', Date.now().toString());
+      formData.append('audio', audioBlob, `${userId}.webm`);
+      formData.append('userId', userId);
+      formData.append('voiceName', userId);
+      formData.append('cloneVoice', 'true');
 
-      const response = await fetch('/api/save-voice', {
+      const response = await fetch('/api/voice/upload-diary', {
         method: 'POST',
         body: formData,
       });
 
-      if (response.ok) {
-        setToastMessage('Voice recording saved successfully!');
+      const data = await response.json();
+
+      if (data.success) {
+        setToastMessage('Voice cloned and transcribed successfully!');
         setToastType('success');
         setShowToast(true);
+
+        // Reset after successful upload
+        setTimeout(() => {
+          onClose();
+        }, 2000);
       } else {
-        throw new Error('Failed to save recording');
+        throw new Error(data.error || 'Failed to save recording');
       }
     } catch (error) {
       console.error('Failed to save recording:', error);
