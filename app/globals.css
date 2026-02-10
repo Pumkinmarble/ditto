@@ -165,6 +165,17 @@ body {
     inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
+/* Diary placeholder ghost text */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.dark [contenteditable][data-placeholder]:empty::before {
+  color: #6B7280;
+}
+
 /* Diary editor text styling */
 [contenteditable] {
   color: #000000 !important;

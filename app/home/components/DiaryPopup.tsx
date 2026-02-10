@@ -61,7 +61,7 @@ export default function DiaryPopup({
   const handleSave = async () => {
     if (!editorRef.current) return;
     const content = editorRef.current.innerText;
-    if (!content.trim() || content.trim() === 'Start writing...') {
+    if (!content.trim()) {
       setToastMessage('Please write something before saving!');
       setToastType('error');
       setShowToast(true);
@@ -146,7 +146,7 @@ export default function DiaryPopup({
         <div className="mb-6">
           <h2 className={`text-2xl font-bold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{currentDate}</h2>
           <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            This is where you can write daily journals, or whatever you want
+            This is where you can write daily journals, or whatever you want!
           </p>
         </div>
 
@@ -228,9 +228,15 @@ export default function DiaryPopup({
             fontFamily: currentFont,
           }}
           suppressContentEditableWarning
-        >
-          <span className={darkMode ? 'text-gray-500' : 'text-gray-400'}>Start writing...</span>
-        </div>
+          data-placeholder="Start writing..."
+          onInput={(e) => {
+            const el = e.currentTarget;
+            if (el.innerHTML === '<br>' || el.innerHTML === '<div><br></div>') {
+              el.innerHTML = '';
+            }
+          }}
+        />
+
 
         {/* Buttons */}
         <div className="flex gap-3 mt-4">
